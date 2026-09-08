@@ -34,3 +34,14 @@ test('Lab remains usable at a mobile viewport', async ({ page }) => {
   const bodyWidth = await page.locator('body').evaluate((element) => element.scrollWidth);
   expect(bodyWidth).toBeLessThanOrEqual(390);
 });
+
+test('Lab exposes the remaining puzzle objects', async ({ page }) => {
+  await page.goto('/lab/');
+
+  for (const name of ['Inventory', 'Dialogue', 'Sequence input', 'Switch group', 'Reveal / Clue', 'Feedback']) {
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+  }
+
+  await page.getByRole('button', { name: 'Revelar pista' }).click();
+  await expect(page.getByText('A marca luminosa deve permanecer no topo: 07.')).toBeVisible();
+});
