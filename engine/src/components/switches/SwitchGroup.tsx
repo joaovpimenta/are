@@ -62,24 +62,15 @@ const styles = stylex.create({
     },
   },
   lever: {
+    display: 'flex',
+    alignItems: 'center',
     width: 34,
     height: 18,
+    padding: 2,
     borderRadius: 999,
     backgroundColor: 'var(--object-muted)',
     transitionProperty: 'background-color, transform',
     transitionDuration: '140ms',
-    ':after': {
-      content: '""',
-      display: 'block',
-      width: 14,
-      height: 14,
-      marginTop: 2,
-      marginLeft: 2,
-      borderRadius: '50%',
-      backgroundColor: 'var(--object-surface)',
-      transitionProperty: 'transform',
-      transitionDuration: '140ms',
-    },
     '@media (prefers-reduced-motion: reduce)': {
       transitionDuration: '0.01ms',
     },
@@ -87,9 +78,20 @@ const styles = stylex.create({
   leverOn: {
     backgroundColor: 'var(--object-accent)',
     transform: 'rotate(-8deg)',
-    ':after': {
-      transform: 'translateX(16px)',
+  },
+  knob: {
+    width: 14,
+    height: 14,
+    borderRadius: '50%',
+    backgroundColor: 'var(--object-surface)',
+    transitionProperty: 'transform',
+    transitionDuration: '140ms',
+    '@media (prefers-reduced-motion: reduce)': {
+      transitionDuration: '0.01ms',
     },
+  },
+  knobOn: {
+    transform: 'translateX(16px)',
   },
   solved: {
     borderColor: 'var(--object-success)',
@@ -141,7 +143,9 @@ export function SwitchGroup({ labels, solution, theme, resetKey = 0, onChange, o
             aria-pressed={values[index]}
             onClick={() => toggle(index)}
           >
-            <span {...stylex.props(styles.lever, values[index] ? styles.leverOn : undefined)} aria-hidden="true" />
+            <span {...stylex.props(styles.lever, values[index] ? styles.leverOn : undefined)} aria-hidden="true">
+              <span {...stylex.props(styles.knob, values[index] ? styles.knobOn : undefined)} />
+            </span>
             {labels?.[index] ?? `SW-${index + 1}`}
           </button>
         ))}
