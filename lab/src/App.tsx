@@ -1,4 +1,5 @@
 import { Canvas } from '@react-three/fiber';
+import * as stylex from '@stylexjs/stylex';
 import { useMachine } from '@xstate/react';
 import {
   Dial3D,
@@ -9,6 +10,7 @@ import {
   useGameStore,
 } from '@are/engine';
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import { dialStyles, labStyles } from './styles';
 
 function SceneLighting() {
   return (
@@ -65,31 +67,37 @@ export function App() {
   };
 
   return (
-    <main className="lab-page" style={cssVars}>
-      <div className="lab-shell">
-        <header className="lab-header">
-          <div className="lab-intro">
-            <p className="lab-eyebrow">ARE / Component Lab</p>
-            <h1 className="lab-title">Puzzle hardware,<br />rendered in 3D.</h1>
-            <p className="lab-subtitle">
-              Primeiro vertical slice do engine: componentes reutilizáveis em Three.js/R3F, composição React, máquina de comportamento XState e estado compartilhado em Zustand.
+    <main {...stylex.props(labStyles.page)} style={cssVars}>
+      <div {...stylex.props(labStyles.shell)}>
+        <header {...stylex.props(labStyles.header)}>
+          <div {...stylex.props(labStyles.intro)}>
+            <p {...stylex.props(labStyles.eyebrow)}>ARE / Component Lab</p>
+            <h1 {...stylex.props(labStyles.title)}>Puzzle hardware,<br />rendered in 3D.</h1>
+            <p {...stylex.props(labStyles.subtitle)}>
+              Primeiro vertical slice do engine: componentes reutilizáveis em Three.js/R3F, composição React, UI em StyleX, máquina de comportamento XState e estado compartilhado em Zustand.
             </p>
           </div>
-          <div className="lab-toolbar">
-            <button className="lab-button" type="button" onClick={() => setThemeName((value) => value === 'cyan' ? 'amber' : 'cyan')}>
+          <div {...stylex.props(labStyles.toolbar)}>
+            <button
+              {...stylex.props(labStyles.interactiveButton, labStyles.button)}
+              type="button"
+              onClick={() => setThemeName((value) => value === 'cyan' ? 'amber' : 'cyan')}
+            >
               Tema: {themeName === 'cyan' ? 'Cyan' : 'Amber'}
             </button>
-            <button className="lab-button" type="button" onClick={reset}>Reset</button>
+            <button {...stylex.props(labStyles.interactiveButton, labStyles.button)} type="button" onClick={reset}>
+              Reset
+            </button>
           </div>
         </header>
 
-        <section className="lab-grid" aria-label="Componentes 3D">
-          <article className="lab-card">
-            <div className="lab-card-header">
-              <h2 className="lab-card-title">Keypad</h2>
-              <span className="lab-badge">{keypadStatus}</span>
+        <section {...stylex.props(labStyles.grid)} aria-label="Componentes 3D">
+          <article {...stylex.props(labStyles.card)}>
+            <div {...stylex.props(labStyles.cardHeader)}>
+              <h2 {...stylex.props(labStyles.cardTitle)}>Keypad</h2>
+              <span {...stylex.props(labStyles.badge)}>{keypadStatus}</span>
             </div>
-            <div className="lab-canvas">
+            <div {...stylex.props(labStyles.canvas)}>
               <Canvas shadows camera={{ position: [0, 0.25, 7.5], fov: 38 }} dpr={[1, 1.5]}>
                 <Suspense fallback={null}>
                   <SceneLighting />
@@ -104,18 +112,18 @@ export function App() {
                 </Suspense>
               </Canvas>
             </div>
-            <div className="lab-card-footer">
+            <div {...stylex.props(labStyles.cardFooter)}>
               <span>Código de teste: <strong>1984</strong></span>
-              <span className="lab-status">{keypad.context.value || '----'}</span>
+              <span {...stylex.props(labStyles.status)}>{keypad.context.value || '----'}</span>
             </div>
           </article>
 
-          <article className="lab-card">
-            <div className="lab-card-header">
-              <h2 className="lab-card-title">Dial</h2>
-              <span className="lab-badge">{dialValue === 7 ? 'solved' : 'active'}</span>
+          <article {...stylex.props(labStyles.card)}>
+            <div {...stylex.props(labStyles.cardHeader)}>
+              <h2 {...stylex.props(labStyles.cardTitle)}>Dial</h2>
+              <span {...stylex.props(labStyles.badge)}>{dialValue === 7 ? 'solved' : 'active'}</span>
             </div>
-            <div className="lab-canvas">
+            <div {...stylex.props(labStyles.canvas)}>
               <Canvas shadows camera={{ position: [0, 0.1, 7.6], fov: 38 }} dpr={[1, 1.5]}>
                 <Suspense fallback={null}>
                   <SceneLighting />
@@ -123,20 +131,36 @@ export function App() {
                 </Suspense>
               </Canvas>
             </div>
-            <div className="lab-card-footer lab-dial-footer">
+            <div {...stylex.props(labStyles.cardFooter, dialStyles.footer)}>
               <span>Arraste, toque nos lados ou use os controles. Alvo: <strong>07</strong></span>
-              <div className="lab-dial-controls" aria-label="Controles do dial">
-                <button className="lab-step-button" type="button" aria-label="Diminuir dial" onClick={() => stepDial(-1)}>−</button>
-                <output className="lab-status" aria-live="polite">{String(dialValue).padStart(2, '0')}</output>
-                <button className="lab-step-button" type="button" aria-label="Aumentar dial" onClick={() => stepDial(1)}>+</button>
+              <div {...stylex.props(dialStyles.controls)} aria-label="Controles do dial">
+                <button
+                  {...stylex.props(labStyles.interactiveButton, dialStyles.stepButton)}
+                  type="button"
+                  aria-label="Diminuir dial"
+                  onClick={() => stepDial(-1)}
+                >
+                  −
+                </button>
+                <output {...stylex.props(labStyles.status)} aria-live="polite">
+                  {String(dialValue).padStart(2, '0')}
+                </output>
+                <button
+                  {...stylex.props(labStyles.interactiveButton, dialStyles.stepButton)}
+                  type="button"
+                  aria-label="Aumentar dial"
+                  onClick={() => stepDial(1)}
+                >
+                  +
+                </button>
               </div>
             </div>
           </article>
         </section>
 
-        <aside className="lab-state-panel">
-          <h2 className="lab-state-title">Shared game state / Zustand</h2>
-          <div className="lab-state-line">
+        <aside {...stylex.props(labStyles.statePanel)}>
+          <h2 {...stylex.props(labStyles.stateTitle)}>Shared game state / Zustand</h2>
+          <div {...stylex.props(labStyles.stateLine)}>
             <span>keypadSolved={String(Boolean(flags.keypadSolved))}</span>
             <span>dialSolved={String(Boolean(flags.dialSolved))}</span>
           </div>
