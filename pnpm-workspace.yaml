@@ -1,0 +1,5 @@
+packages:
+  - engine
+  - lab
+  - site
+  - adventures/*
