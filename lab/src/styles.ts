@@ -302,3 +302,24 @@ export const dialStyles = stylex.create({
     touchAction: 'manipulation',
   },
 });
+
+export const objectStyles = stylex.create({
+  body: {
+    display: 'grid',
+    gap: 12,
+    padding: {
+      default: '14px 20px 20px',
+      '@media (max-width: 640px)': '12px 15px 15px',
+    },
+  },
+  stack: {
+    display: 'grid',
+    gap: 12,
+  },
+  note: {
+    margin: 0,
+    color: 'var(--are-muted)',
+    fontSize: 12,
+    lineHeight: 1.5,
+  },
+});

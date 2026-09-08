@@ -12,7 +12,7 @@ test('Lab renders keypad and dial canvases', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: /Puzzle hardware/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Keypad' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Dial' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dial', exact: true })).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(2);
   await expect(page.getByText('keypadSolved=false')).toBeVisible();
   await expect(page.getByText('dialSolved=false')).toBeVisible();
@@ -33,4 +33,15 @@ test('Lab remains usable at a mobile viewport', async ({ page }) => {
 
   const bodyWidth = await page.locator('body').evaluate((element) => element.scrollWidth);
   expect(bodyWidth).toBeLessThanOrEqual(390);
+});
+
+test('Lab exposes the remaining puzzle objects', async ({ page }) => {
+  await page.goto('/lab/');
+
+  for (const name of ['Inventory', 'Dialogue', 'Sequence input', 'Switch group', 'Reveal / Clue', 'Feedback']) {
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+  }
+
+  await page.getByRole('button', { name: 'Revelar pista' }).click();
+  await expect(page.getByText('A marca luminosa deve permanecer no topo: 07.')).toBeVisible();
 });

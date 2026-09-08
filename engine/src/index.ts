@@ -19,3 +19,12 @@ export type { RuntimeScene, SequentialRuntimeEvents, SequentialRuntimeOptions } 
 export { useGameStore } from './store/gameStore';
 export { amberTheme, defaultTheme } from './theme';
 export type { AreTheme } from './theme';
+export { InventoryPanel } from './components/inventory/InventoryPanel';
+export type { InventoryItem } from './components/inventory/InventoryPanel';
+export { DialoguePanel } from './components/dialogue/DialoguePanel';
+export type { DialogueChoice, DialogueLine } from './components/dialogue/DialoguePanel';
+export { SequenceInput } from './components/sequence/SequenceInput';
+export { SwitchGroup } from './components/switches/SwitchGroup';
+export { RevealClue } from './components/reveal/RevealClue';
+export { FeedbackPanel } from './components/feedback/FeedbackPanel';
+export type { FeedbackStatus } from './components/feedback/FeedbackPanel';
