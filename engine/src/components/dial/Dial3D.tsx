@@ -74,6 +74,7 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
           event.stopPropagation();
           dragStartX.current = event.nativeEvent.clientX;
           dragLastStep.current = 0;
+          // R3F targets are not guaranteed to be DOM elements, so narrow before capture.
           if (event.target instanceof Element) {
             event.target.setPointerCapture(event.pointerId);
           }
