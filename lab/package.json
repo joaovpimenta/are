@@ -1,0 +1,7 @@
+{
+  "name": "@are/lab",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Interactive ARE component and regression laboratory"
+}
