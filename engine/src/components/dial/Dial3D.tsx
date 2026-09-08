@@ -74,7 +74,9 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
           event.stopPropagation();
           dragStartX.current = event.nativeEvent.clientX;
           dragLastStep.current = 0;
-          event.target.setPointerCapture?.(event.pointerId);
+          if (event.target instanceof Element) {
+            event.target.setPointerCapture(event.pointerId);
+          }
         }}
         onPointerMove={(event) => {
           if (dragStartX.current === null) return;
@@ -92,7 +94,9 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
           const start = dragStartX.current;
           dragStartX.current = null;
           dragLastStep.current = 0;
-          event.target.releasePointerCapture?.(event.pointerId);
+          if (event.target instanceof Element) {
+            event.target.releasePointerCapture(event.pointerId);
+          }
           if (start !== null && Math.abs(event.nativeEvent.clientX - start) < 8) {
             step(event.uv && event.uv.x < 0.5 ? -1 : 1);
           }
