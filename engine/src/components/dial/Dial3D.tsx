@@ -33,6 +33,8 @@ type Dial3DProps = {
 
 export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }: Dial3DProps) {
   const group = useRef<Group>(null);
+  const dragStartX = useRef<number | null>(null);
+  const dragLastStep = useRef(0);
   const [hovered, setHovered] = useState(false);
   const solved = value === target;
   const range = max - min + 1;
@@ -68,9 +70,36 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
           setHovered(true);
         }}
         onPointerLeave={() => setHovered(false)}
-        onClick={(event) => {
+        onPointerDown={(event) => {
           event.stopPropagation();
-          step(event.uv && event.uv.x < 0.5 ? -1 : 1);
+          dragStartX.current = event.nativeEvent.clientX;
+          dragLastStep.current = 0;
+          event.target.setPointerCapture?.(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (dragStartX.current === null) return;
+          event.stopPropagation();
+          const distance = event.nativeEvent.clientX - dragStartX.current;
+          const stepIndex = Math.trunc(distance / 34);
+          const delta = stepIndex - dragLastStep.current;
+          if (delta !== 0) {
+            step(delta > 0 ? 1 : -1);
+            dragLastStep.current = stepIndex;
+          }
+        }}
+        onPointerUp={(event) => {
+          event.stopPropagation();
+          const start = dragStartX.current;
+          dragStartX.current = null;
+          dragLastStep.current = 0;
+          event.target.releasePointerCapture?.(event.pointerId);
+          if (start !== null && Math.abs(event.nativeEvent.clientX - start) < 8) {
+            step(event.uv && event.uv.x < 0.5 ? -1 : 1);
+          }
+        }}
+        onPointerCancel={() => {
+          dragStartX.current = null;
+          dragLastStep.current = 0;
         }}
         onWheel={(event) => {
           event.stopPropagation();
