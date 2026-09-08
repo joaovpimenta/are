@@ -1,7 +1,8 @@
 * { box-sizing: border-box; }
+:root { color-scheme: dark; }
 html { background: #05080d; color-scheme: dark; }
 html, body, #root { width: 100%; min-width: 100%; min-height: 100%; margin: 0; }
-body { min-height: 100vh; overflow-x: hidden; background: #05080d; }
+body { min-height: 100dvh; overflow-x: hidden; background: #05080d; }
 button, input, select, textarea { font: inherit; }
 button { appearance: none; }
 canvas { display: block; width: 100% !important; height: 100% !important; outline: none; touch-action: none; }
