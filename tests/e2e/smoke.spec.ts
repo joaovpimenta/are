@@ -12,7 +12,7 @@ test('Lab renders keypad and dial canvases', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: /Puzzle hardware/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Keypad' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Dial' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dial', exact: true })).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(2);
   await expect(page.getByText('keypadSolved=false')).toBeVisible();
   await expect(page.getByText('dialSolved=false')).toBeVisible();
