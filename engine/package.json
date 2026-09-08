@@ -3,5 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Reusable ARE engine: puzzles, runtime, renderers, themes and scenarios"
+  "description": "Reusable ARE engine: puzzles, runtime, renderers, themes and scenarios",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "peerDependencies": {
+    "@react-three/fiber": "*",
+    "@stylexjs/stylex": "*",
+    "react": "*",
+    "three": "*",
+    "xstate": "*",
+    "zustand": "*"
+  }
 }
