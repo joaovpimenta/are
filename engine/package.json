@@ -9,6 +9,7 @@
     "./*": "./src/*"
   },
   "peerDependencies": {
+    "@react-three/drei": "*",
     "@react-three/fiber": "*",
     "@stylexjs/stylex": "*",
     "react": "*",
