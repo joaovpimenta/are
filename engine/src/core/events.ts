@@ -1,4 +1,4 @@
-export type EventMap = Record<string, unknown>;
+export type EventMap = object;
 
 export type EventListener<Payload> = (payload: Payload) => void;
 
