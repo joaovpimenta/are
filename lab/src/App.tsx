@@ -132,7 +132,7 @@ export function App() {
               </Canvas>
             </div>
             <div {...stylex.props(labStyles.cardFooter, dialStyles.footer)}>
-              <span>Gire o aro com arraste ou toque. Alvo: <strong>07</strong></span>
+              <span>Gire o aro como um relógio: arraste ou toque. Alvo: <strong>07</strong></span>
               <div {...stylex.props(dialStyles.controls)} aria-label="Controles do dial">
                 <button
                   {...stylex.props(labStyles.interactiveButton, dialStyles.stepButton)}
