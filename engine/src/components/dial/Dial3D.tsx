@@ -57,8 +57,8 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
 
   return (
     <group position={[0, -0.05, 0]}>
-      <mesh castShadow receiveShadow position={[0, 0, -0.34]}>
-        <cylinderGeometry args={[2.05, 2.05, 0.48, 64]} />
+      <mesh castShadow receiveShadow position={[0, 0, -0.48]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[2.05, 2.05, 0.42, 64]} />
         <meshStandardMaterial color={theme.surface} metalness={0.84} roughness={0.22} />
       </mesh>
 
@@ -99,7 +99,7 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
             event.target.releasePointerCapture(event.pointerId);
           }
           if (start !== null && Math.abs(event.nativeEvent.clientX - start) < 8) {
-            step(event.uv && event.uv.x < 0.5 ? -1 : 1);
+            step(event.point.x < 0 ? -1 : 1);
           }
         }}
         onPointerCancel={() => {
@@ -124,7 +124,7 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
         {Array.from({ length: range }, (_, index) => {
           const angle = index * ((Math.PI * 2) / range);
           return (
-            <mesh key={index} position={[Math.sin(angle) * 1.31, 0.39, Math.cos(angle) * 1.31]} rotation={[0, -angle, 0]}>
+            <mesh key={index} position={[Math.sin(angle) * 1.31, 0.39, -Math.cos(angle) * 1.31]} rotation={[0, angle, 0]}>
               <boxGeometry args={[0.055, 0.08, 0.22]} />
               <meshStandardMaterial color={index === value - min ? theme.accent : '#263342'} emissive={theme.accent} emissiveIntensity={index === value - min ? 0.7 : 0.02} />
             </mesh>
