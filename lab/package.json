@@ -3,5 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Interactive ARE component and regression laboratory"
+  "description": "Interactive ARE component and regression laboratory",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@are/engine": "workspace:*"
+  }
 }
