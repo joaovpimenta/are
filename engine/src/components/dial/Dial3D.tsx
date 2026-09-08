@@ -64,7 +64,7 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
 
       <group
         ref={group}
-        rotation={[Math.PI / 2, 0, 0]}
+        rotation={[0, 0, 0]}
         onPointerEnter={(event) => {
           event.stopPropagation();
           setHovered(true);
@@ -111,7 +111,7 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
           step(event.deltaY > 0 ? 1 : -1);
         }}
       >
-        <mesh castShadow>
+        <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[1.48, 1.64, 0.72, 64]} />
           <meshStandardMaterial
             color={hovered ? theme.surfaceRaised : theme.metal}
@@ -124,8 +124,8 @@ export function Dial3D({ value, target = 7, min = 0, max = 9, theme, onChange }:
         {Array.from({ length: range }, (_, index) => {
           const angle = index * ((Math.PI * 2) / range);
           return (
-            <mesh key={index} position={[Math.sin(angle) * 1.31, 0.39, -Math.cos(angle) * 1.31]} rotation={[0, angle, 0]}>
-              <boxGeometry args={[0.055, 0.08, 0.22]} />
+            <mesh key={index} position={[Math.sin(angle) * 1.31, Math.cos(angle) * 1.31, 0.39]} rotation={[0, 0, -angle]}>
+              <boxGeometry args={[0.055, 0.22, 0.08]} />
               <meshStandardMaterial color={index === value - min ? theme.accent : '#263342'} emissive={theme.accent} emissiveIntensity={index === value - min ? 0.7 : 0.02} />
             </mesh>
           );
