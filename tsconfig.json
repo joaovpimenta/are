@@ -13,5 +13,13 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "files": []
+  "include": [
+    "engine/src/**/*.ts",
+    "engine/src/**/*.tsx",
+    "lab/src/**/*.ts",
+    "lab/src/**/*.tsx",
+    "lab/vite.config.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts"
+  ]
 }
