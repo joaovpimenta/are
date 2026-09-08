@@ -1,0 +1,42 @@
+{
+  "name": "are",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Adventure Rooms Engine monorepo",
+  "scripts": {
+    "dev": "pnpm --filter @are/lab dev",
+    "lint": "eslint . --no-error-on-unmatched-pattern",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "build": "node scripts/build.mjs",
+    "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "dependencies": {
+    "@react-three/drei": "latest",
+    "@react-three/fiber": "latest",
+    "@stylexjs/stylex": "latest",
+    "@xstate/react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "three": "latest",
+    "xstate": "latest",
+    "zustand": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@stylexjs/unplugin": "latest",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/three": "latest",
+    "@vitejs/plugin-react": "latest",
+    "eslint": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}
