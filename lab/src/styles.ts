@@ -12,9 +12,8 @@ export const labStyles = stylex.create({
     minHeight: '100dvh',
     color: 'var(--are-text)',
     backgroundColor: 'var(--are-bg)',
-    backgroundImage:
-      'radial-gradient(circle at 14% -10%, color-mix(in srgb, var(--are-accent) 16%, transparent), transparent 34rem), linear-gradient(180deg, color-mix(in srgb, var(--are-bg) 92%, #142131), var(--are-bg))',
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    backgroundImage: 'var(--are-page-background)',
+    fontFamily: 'var(--are-font-body)',
   },
   topbar: {
     position: 'sticky',
@@ -36,6 +35,7 @@ export const labStyles = stylex.create({
     backgroundColor: 'color-mix(in srgb, var(--are-bg) 88%, transparent)',
     backdropFilter: 'blur(18px)',
     flexWrap: 'wrap',
+    backgroundImage: 'var(--are-surface-texture)',
   },
   brand: {
     display: 'flex',
@@ -93,6 +93,11 @@ export const labStyles = stylex.create({
       borderColor: 'var(--are-accent)',
     },
     ':focus-visible': focusRing,
+  },
+  themeSelect: {
+    appearance: 'auto',
+    minWidth: 196,
+    fontFamily: 'var(--are-font-mono)',
   },
   resetButton: {
     minHeight: 44,
@@ -235,7 +240,7 @@ export const labStyles = stylex.create({
     borderRadius: 10,
     color: 'var(--are-muted)',
     backgroundColor: 'color-mix(in srgb, var(--are-bg) 84%, black)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 12,
     lineHeight: 1.45,
     overflowY: 'auto',
@@ -257,7 +262,7 @@ export const labStyles = stylex.create({
   kicker: {
     margin: '0 0 7px',
     color: 'var(--are-accent)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 12,
     fontWeight: 900,
     letterSpacing: 1.4,
@@ -269,6 +274,8 @@ export const labStyles = stylex.create({
     fontSize: 'clamp(30px, 5vw, 54px)',
     lineHeight: 1,
     letterSpacing: '-0.04em',
+    fontFamily: 'var(--are-font-display)',
+    textShadow: 'var(--are-title-shadow)',
   },
   description: {
     maxWidth: 680,
@@ -316,13 +323,13 @@ export const labStyles = stylex.create({
     borderRadius: 9,
     color: 'var(--are-accent)',
     backgroundColor: 'var(--are-accent-soft)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 12,
     fontWeight: 900,
   },
   catalogStatus: {
     color: 'var(--are-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 11,
     fontWeight: 850,
     textTransform: 'uppercase',
@@ -337,6 +344,7 @@ export const labStyles = stylex.create({
       '@media (max-width: 760px)': 16,
     },
     backgroundColor: 'color-mix(in srgb, var(--are-surface) 94%, transparent)',
+    backgroundImage: 'var(--are-surface-texture)',
     boxShadow: '0 24px 90px rgba(0,0,0,.28)',
   },
   workbenchHeader: {
@@ -354,6 +362,8 @@ export const labStyles = stylex.create({
     fontSize: 'clamp(28px, 4vw, 46px)',
     lineHeight: 1,
     letterSpacing: '-0.035em',
+    fontFamily: 'var(--are-font-display)',
+    textShadow: 'var(--are-title-shadow)',
   },
   statusBadge: {
     flexShrink: 0,
@@ -365,7 +375,7 @@ export const labStyles = stylex.create({
     borderRadius: 999,
     color: 'var(--are-accent)',
     backgroundColor: 'var(--are-accent-soft)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 12,
     fontWeight: 900,
     textTransform: 'uppercase',
@@ -382,8 +392,7 @@ export const labStyles = stylex.create({
     borderBottomWidth: 1,
     borderStyle: 'solid',
     borderColor: 'color-mix(in srgb, var(--are-accent) 12%, transparent)',
-    backgroundImage:
-      'radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--are-accent) 13%, transparent), transparent 44%), linear-gradient(180deg, color-mix(in srgb, var(--are-bg) 80%, #111c28), var(--are-bg))',
+    backgroundImage: 'var(--are-stage-background)',
   },
   domStage: {
     display: 'grid',
@@ -411,7 +420,7 @@ export const labStyles = stylex.create({
   sectionLabel: {
     margin: '0 0 5px',
     color: 'var(--are-accent)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 12,
     fontWeight: 900,
     letterSpacing: 1.2,
@@ -460,7 +469,7 @@ export const labStyles = stylex.create({
     minWidth: 58,
     minHeight: 48,
     color: 'var(--are-accent)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 18,
     fontWeight: 900,
   },
@@ -515,7 +524,7 @@ export const labStyles = stylex.create({
   telemetry: {
     marginTop: 12,
     color: 'var(--are-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 13,
   },
   hints: {

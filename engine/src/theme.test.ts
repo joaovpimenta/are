@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { amberTheme, defaultTheme, toLabThemeStyle, toObjectThemeStyle, toThreeTheme } from './theme';
+import {
+  amberTheme,
+  builtInThemes,
+  defaultTheme,
+  strangerThingsTheme,
+  toLabThemeStyle,
+  toObjectThemeStyle,
+  toThreeTheme,
+} from './theme';
 
 describe('theme adapters', () => {
   it('maps every semantic state to DOM variables', () => {
@@ -24,5 +32,20 @@ describe('theme adapters', () => {
       glow: defaultTheme.glow,
     }));
   });
-});
 
+  it('ships the Stranger Things preset as a reusable DOM and Three.js theme', () => {
+    expect(Object.keys(builtInThemes)).toEqual(['cyan', 'amber', 'stranger-things']);
+    expect(builtInThemes['stranger-things']).toBe(strangerThingsTheme);
+    expect(toLabThemeStyle(strangerThingsTheme)).toMatchObject({
+      '--are-accent': strangerThingsTheme.accent,
+      '--are-font-display': strangerThingsTheme.typography?.display,
+      '--are-page-background': strangerThingsTheme.atmosphere?.pageBackground,
+      '--are-title-shadow': strangerThingsTheme.atmosphere?.titleShadow,
+    });
+    expect(toObjectThemeStyle(strangerThingsTheme)).toMatchObject({
+      '--object-accent': strangerThingsTheme.accent,
+      '--object-font-mono': strangerThingsTheme.typography?.mono,
+    });
+    expect(toThreeTheme(strangerThingsTheme).glow).toBe(strangerThingsTheme.glow);
+  });
+});

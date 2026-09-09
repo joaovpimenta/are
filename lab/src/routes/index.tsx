@@ -9,7 +9,7 @@ const styles = stylex.create({
     placeItems: 'center',
     minHeight: 360,
     color: 'var(--are-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 12,
     letterSpacing: 1.2,
     textTransform: 'uppercase',

@@ -40,12 +40,14 @@ export { matchesLockInput, matchesLockSolution, normalizeLockScalar } from './me
 export type { LockDefinition, LockLocation, LockValue } from './mechanisms/locks';
 export {
   amberTheme,
+  builtInThemes,
   defaultTheme,
+  strangerThingsTheme,
   toLabThemeStyle,
   toObjectThemeStyle,
   toThreeTheme,
 } from './theme';
-export type { AreTheme, ThreeTheme } from './theme';
+export type { AreTheme, AreThemeName, ThemeAtmosphere, ThemeTypography, ThreeTheme } from './theme';
 export { InventoryPanel } from './components/inventory/InventoryPanel';
 export type { InventoryItem } from './components/inventory/InventoryPanel';
 export { DialoguePanel } from './components/dialogue/DialoguePanel';

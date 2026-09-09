@@ -92,7 +92,7 @@ const styles = stylex.create({
     display: 'block',
     marginBottom: 4,
     color: 'var(--are-accent)',
-    fontFamily: 'ui-monospace, monospace',
+    fontFamily: 'var(--are-font-mono)',
     fontSize: 10,
     fontWeight: 900,
     letterSpacing: 1,

@@ -22,6 +22,23 @@ test('Lab exposes all mechanisms as direct routes', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Aumentar rotor 1' })).toBeEnabled();
 });
 
+test('Lab applies the Stranger Things theme across the shared shell', async ({ page }) => {
+  await page.goto('/lab/');
+
+  const themeSelect = page.getByRole('combobox', { name: 'Tema do Lab' });
+  await themeSelect.selectOption('stranger-things');
+  await expect(themeSelect).toHaveValue('stranger-things');
+
+  const themeRoot = page.locator('#root > div');
+  expect(await themeRoot.evaluate((element) =>
+    getComputedStyle(element).getPropertyValue('--are-accent').trim(),
+  )).toBe('#d91f36');
+
+  await page.getByRole('link', { name: /Keypad/ }).first().click();
+  await expect(themeSelect).toHaveValue('stranger-things');
+  await expect(page.locator('canvas')).toHaveCount(1);
+});
+
 test('Lock archive separates and operates all 14 examples', async ({ page }) => {
   await page.goto('/lab/locks/');
 

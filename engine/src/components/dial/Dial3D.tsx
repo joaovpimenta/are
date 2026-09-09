@@ -28,7 +28,7 @@ const styles = stylex.create({
     color: 'var(--object-text)',
     backgroundColor: 'color-mix(in srgb, var(--object-surface) 90%, black)',
     border: '1px solid color-mix(in srgb, var(--object-accent) 22%, transparent)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono)',
     fontSize: 13,
     fontWeight: 800,
     userSelect: 'none',
