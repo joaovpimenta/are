@@ -5,7 +5,6 @@ import * as stylex from '@stylexjs/stylex';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Group, Mesh } from 'three';
 import {
-  COMPASS_DIRECTION_HEADINGS,
   compassDirectionForHeading,
   headingFromOrientation,
   isCompassDirection,
@@ -372,8 +371,8 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
   const currentDirection = heading === null ? null : compassDirectionForHeading(heading);
   const needleRotation = heading === null ? 0 : heading * Math.PI / 180;
   const directionPositions: Record<string, [number, number, number]> = {
-    N: [0, 1.2, 0.19], NE: [0.88, 0.88, 0.19], E: [1.24, 0, 0.19], SE: [0.88, -0.88, 0.19],
-    S: [0, -1.2, 0.19], SO: [-0.88, -0.88, 0.19], O: [-1.24, 0, 0.19], NO: [-0.88, 0.88, 0.19],
+    N: [0, 1.08, 0.19], NE: [0.78, 0.78, 0.19], E: [1.1, 0, 0.19], SE: [0.78, -0.78, 0.19],
+    S: [0, -1.08, 0.19], SO: [-0.78, -0.78, 0.19], O: [-1.1, 0, 0.19], NO: [-0.78, 0.78, 0.19],
   };
 
   useEffect(() => {
@@ -454,11 +453,11 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
     <DeviceHousing palette={palette} status={status}>
       <SequenceReadout sequence={sequence} theme={theme} />
       <mesh position={[0, 0, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[1.58, 1.58, 0.18, 64]} />
+        <cylinderGeometry args={[1.5, 1.5, 0.18, 64]} />
         <meshStandardMaterial color={palette.metalDark} metalness={0.86} roughness={0.23} />
       </mesh>
       <mesh position={[0, 0, 0.13]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.34, 0.035, 16, 64]} />
+        <torusGeometry args={[1.27, 0.035, 16, 64]} />
         <meshStandardMaterial color={palette.metalLight} metalness={0.92} roughness={0.18} />
       </mesh>
       {Object.entries(directionPositions).map(([direction, position]) => (
@@ -470,12 +469,12 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
         </Html>
       ))}
       <group position={[0, 0, 0.3]} rotation={[0, 0, needleRotation]}>
-        <mesh position={[0, 0.48, 0]}>
-          <coneGeometry args={[0.16, 0.92, 3]} />
+        <mesh position={[0, 0.43, 0]}>
+          <coneGeometry args={[0.15, 0.82, 3]} />
           <meshStandardMaterial color={palette.danger} emissive={palette.danger} emissiveIntensity={0.42} metalness={0.48} roughness={0.3} />
         </mesh>
-        <mesh position={[0, -0.43, 0]} rotation={[0, 0, Math.PI]}>
-          <coneGeometry args={[0.13, 0.78, 3]} />
+        <mesh position={[0, -0.39, 0]} rotation={[0, 0, Math.PI]}>
+          <coneGeometry args={[0.12, 0.7, 3]} />
           <meshStandardMaterial color={palette.metalLight} metalness={0.88} roughness={0.22} />
         </mesh>
       </group>
@@ -483,11 +482,11 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
         <sphereGeometry args={[0.12, 24, 24]} />
         <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.22} metalness={0.9} roughness={0.18} />
       </mesh>
-      <LabelPlate position={[0, -1.22, 0.18]} theme={theme} width={2.8}>{readout}</LabelPlate>
+      <LabelPlate position={[0, -1.38, 0.18]} theme={theme} width={2.8}>{readout}</LabelPlate>
       {permission === 'prompt' ? (
-        <PhysicalButton label="ATIVAR BÚSSOLA" position={[0, -1.7, 0.12]} palette={palette} theme={theme} onPress={() => void requestCompass()} disabled={status === 'solved'} active size={[1.8, 0.48, 0.2]} />
+        <PhysicalButton label="ATIVAR BÚSSOLA" position={[0, -1.78, 0.12]} palette={palette} theme={theme} onPress={() => void requestCompass()} disabled={status === 'solved'} active size={[1.8, 0.48, 0.2]} />
       ) : (
-        <PhysicalButton label="LIMPAR" position={[0, -1.7, 0.12]} palette={palette} theme={theme} onPress={onClear} disabled={false} size={[1.28, 0.48, 0.2]} />
+        <PhysicalButton label="LIMPAR" position={[0, -1.78, 0.12]} palette={palette} theme={theme} onPress={onClear} disabled={false} size={[1.28, 0.48, 0.2]} />
       )}
     </DeviceHousing>
   );
