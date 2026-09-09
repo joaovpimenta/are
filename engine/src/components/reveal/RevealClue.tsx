@@ -1,7 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
-import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle } from '../../theme';
 
 type RevealClueProps = {
   title: string;
@@ -71,14 +71,7 @@ const styles = stylex.create({
 
 export function RevealClue({ title, teaser, content, theme, resetKey = 0, onReveal }: RevealClueProps) {
   const [revealed, setRevealed] = useState(false);
-  const variables = {
-    '--object-accent': theme.accent,
-    '--object-accent-soft': theme.accentSoft,
-    '--object-surface': theme.surface,
-    '--object-surface-raised': theme.surfaceRaised,
-    '--object-text': theme.text,
-    '--object-muted': theme.muted,
-  } as CSSProperties;
+  const variables = toObjectThemeStyle(theme);
 
   useEffect(() => {
     setRevealed(false);
@@ -96,7 +89,7 @@ export function RevealClue({ title, teaser, content, theme, resetKey = 0, onReve
       {revealed ? (
         <p {...stylex.props(styles.content)} aria-live="polite">{content}</p>
       ) : (
-        <button {...stylex.props(styles.button)} type="button" onClick={reveal} aria-expanded={false}>
+        <button {...stylex.props(styles.button)} type="button" onClick={reveal} aria-expanded={revealed}>
           Revelar pista
         </button>
       )}

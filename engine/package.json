@@ -6,7 +6,12 @@
   "description": "Reusable ARE engine: puzzles, runtime, renderers, themes and scenarios",
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*"
+    "./theme": "./src/theme.ts",
+    "./core/*": "./src/core/*.ts",
+    "./session/*": "./src/session/*.ts",
+    "./mechanisms/*": "./src/mechanisms/*.ts",
+    "./components/keypad/keypadMachine": "./src/components/keypad/keypadMachine.ts",
+    "./components/*": "./src/components/*.tsx"
   },
   "peerDependencies": {
     "@react-three/drei": "*",
@@ -14,7 +19,6 @@
     "@stylexjs/stylex": "*",
     "react": "*",
     "three": "*",
-    "xstate": "*",
-    "zustand": "*"
+    "xstate": "*"
   }
 }

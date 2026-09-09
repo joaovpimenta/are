@@ -1,6 +1,6 @@
 # Adventures
 
-Each direct child directory is an adventure module discovered by the build.
+Each direct child directory must be an Adventure module with a validated manifest. Directories without `adventure.json` fail the build instead of becoming placeholder routes.
 
 Expected shape:
 
@@ -8,19 +8,21 @@ Expected shape:
 adventures/<slug>/
 ├─ package.json
 ├─ src/
-├─ assets/
-├─ components/
-├─ themes/
-├─ scenarios/
-└─ adventure.ts
+├─ index.html
+├─ vite.config.ts
+├─ adventure.json
+└─ src/
+   ├─ main.tsx
+   ├─ scenario.ts
+   └─ local renderers
 ```
 
 Adventure responsibilities:
 
-- compose engine capabilities;
-- define story/progression and content;
-- select theme and scenario;
+- compose engine modules through their focused interfaces;
+- define Scene progression and content;
+- select a Theme and Scenario;
 - provide assets;
-- optionally override engine components/themes/scenarios by the same identifier.
+- add local renderers only when an Adventure-specific Artifact justifies the seam.
 
-Reusable behavior should be promoted to `engine/` instead of being copied between adventures.
+Reusable behavior should move to `engine/` after a second use proves leverage. See `echo-station/` for the smallest complete assembly.

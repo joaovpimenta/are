@@ -1,0 +1,5 @@
+* { box-sizing: border-box; }
+:root { color-scheme: dark; background: #070a0f; }
+html, body, #root { width: 100%; min-width: 100%; min-height: 100%; margin: 0; }
+body { min-height: 100dvh; overflow-x: hidden; background: #070a0f; }
+::selection { background: rgba(97, 218, 251, .28); }

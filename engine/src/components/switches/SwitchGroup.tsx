@@ -1,7 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
-import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { createSwitchValues, matchesSwitchSolution, toggleSwitch } from '../../mechanisms/switches';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle } from '../../theme';
 
 type SwitchGroupProps = {
   labels?: readonly string[];
@@ -99,29 +100,23 @@ const styles = stylex.create({
 });
 
 export function SwitchGroup({ labels, solution, theme, resetKey = 0, onChange, onSolved }: SwitchGroupProps) {
-  const [values, setValues] = useState(() => solution.map(() => false));
+  const [values, setValues] = useState(() => createSwitchValues(solution));
   const [solved, setSolved] = useState(false);
-  const variables = {
-    '--object-accent': theme.accent,
-    '--object-surface': theme.surface,
-    '--object-surface-raised': theme.surfaceRaised,
-    '--object-text': theme.text,
-    '--object-muted': theme.muted,
-    '--object-success': theme.success,
-  } as CSSProperties;
+  const variables = toObjectThemeStyle(theme);
+  const solutionKey = solution.map(Number).join(',');
 
   useEffect(() => {
-    setValues(solution.map(() => false));
+    setValues(createSwitchValues(solution));
     setSolved(false);
-  }, [resetKey, solution]);
+  }, [resetKey, solutionKey]);
 
   const toggle = (index: number) => {
     if (solved) return;
-    const next = values.map((value, position) => position === index ? !value : value);
+    const next = toggleSwitch(values, index);
     setValues(next);
     onChange?.(next);
 
-    if (next.every((value, position) => value === solution[position])) {
+    if (matchesSwitchSolution(next, solution)) {
       setSolved(true);
       onSolved?.();
     }

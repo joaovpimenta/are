@@ -1,6 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
-import type { CSSProperties } from 'react';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle } from '../../theme';
 
 export type InventoryItem = {
   id: string;
@@ -119,15 +119,8 @@ const styles = stylex.create({
 });
 
 export function InventoryPanel({ items, selectedId, theme, onSelect }: InventoryPanelProps) {
-  const collectedCount = items.filter((item) => item.collected !== false).length;
-  const variables = {
-    '--object-accent': theme.accent,
-    '--object-accent-soft': theme.accentSoft,
-    '--object-surface': theme.surface,
-    '--object-surface-raised': theme.surfaceRaised,
-    '--object-text': theme.text,
-    '--object-muted': theme.muted,
-  } as CSSProperties;
+  const collectedCount = items.filter((item) => item.collected === true).length;
+  const variables = toObjectThemeStyle(theme);
 
   return (
     <section {...stylex.props(styles.panel)} style={variables} aria-label="Inventário">
@@ -145,6 +138,7 @@ export function InventoryPanel({ items, selectedId, theme, onSelect }: Inventory
                 {...stylex.props(styles.item, selectedId === item.id ? styles.selected : undefined)}
                 type="button"
                 aria-pressed={selectedId === item.id}
+                data-collected={item.collected === true}
                 onClick={() => onSelect?.(item)}
               >
                 <span {...stylex.props(styles.icon)} aria-hidden="true">{item.symbol ?? '◇'}</span>

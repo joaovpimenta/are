@@ -1,7 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
-import type { CSSProperties } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { createSequenceState, transitionSequence } from '../../mechanisms/sequence';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle } from '../../theme';
 
 type SequenceInputProps = {
   symbols: readonly string[];
@@ -84,78 +85,66 @@ const styles = stylex.create({
 });
 
 export function SequenceInput({ symbols, solution, theme, resetKey = 0, onChange, onSolved, onError }: SequenceInputProps) {
-  const [selection, setSelection] = useState<number[]>([]);
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [state, setState] = useState(createSequenceState);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const variables = {
-    '--object-accent': theme.accent,
-    '--object-accent-soft': theme.accentSoft,
-    '--object-surface': theme.surface,
-    '--object-surface-raised': theme.surfaceRaised,
-    '--object-text': theme.text,
-    '--object-muted': theme.muted,
-    '--object-success': theme.success,
-    '--object-danger': theme.danger,
-  } as CSSProperties;
+  const variables = toObjectThemeStyle(theme);
+  const solutionKey = solution.join(',');
 
   useEffect(() => () => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
   }, []);
 
   useEffect(() => {
-    setSelection([]);
-    setStatus('idle');
-  }, [resetKey]);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = null;
+    setState(createSequenceState());
+  }, [resetKey, solutionKey]);
 
   const choose = (index: number) => {
-    if (status === 'success' || selection.includes(index)) return;
-
-    const next = [...selection, index];
-    setSelection(next);
-    onChange?.(next);
-
-    if (next.length !== solution.length) return;
-
-    const correct = next.every((value, position) => value === solution[position]);
-    if (correct) {
-      setStatus('success');
+    const next = transitionSequence(state, { type: 'SELECT', index }, solution);
+    if (next === state) return;
+    setState(next);
+    onChange?.(next.selection);
+    if (next.status === 'solved') {
       onSolved?.();
       return;
     }
-
-    setStatus('error');
-    onError?.();
-    resetTimer.current = setTimeout(() => {
-      setSelection([]);
-      setStatus('idle');
-      onChange?.([]);
-    }, 650);
+    if (next.status === 'error') {
+      onError?.();
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => {
+        const reset = transitionSequence(next, { type: 'RESET' }, solution);
+        setState(reset);
+        onChange?.(reset.selection);
+        resetTimer.current = null;
+      }, 650);
+    }
   };
 
-  const statusLabel = status === 'success' ? 'Sequência correta.' : status === 'error' ? 'Sequência incorreta. Tente outra vez.' : 'Escolha cada símbolo uma vez.';
+  const statusLabel = state.status === 'solved' ? 'Sequência correta.' : state.status === 'error' ? 'Sequência incorreta. Tente outra vez.' : 'Escolha cada símbolo uma vez.';
 
   return (
     <section {...stylex.props(styles.panel)} style={variables} aria-label="Entrada de sequência">
       <div {...stylex.props(styles.header)}>
         <span>Sequência</span>
-        <span {...stylex.props(styles.hint)}>{selection.length}/{solution.length}</span>
+        <span {...stylex.props(styles.hint)}>{state.selection.length}/{solution.length}</span>
       </div>
       <div {...stylex.props(styles.grid)}>
         {symbols.map((symbol, index) => (
           <button
-            {...stylex.props(styles.tile, selection.includes(index) ? styles.tileSelected : undefined)}
+            {...stylex.props(styles.tile, state.selection.includes(index) ? styles.tileSelected : undefined)}
             key={`${symbol}-${index}`}
             type="button"
             aria-label={`Símbolo ${symbol}, posição ${index + 1}`}
-            aria-pressed={selection.includes(index)}
-            disabled={status === 'success'}
+            aria-pressed={state.selection.includes(index)}
+            disabled={state.status === 'solved'}
             onClick={() => choose(index)}
           >
             {symbol}
           </button>
         ))}
       </div>
-      <p {...stylex.props(styles.status, status === 'success' ? styles.success : status === 'error' ? styles.error : undefined)} aria-live="polite">
+      <p {...stylex.props(styles.status, state.status === 'solved' ? styles.success : state.status === 'error' ? styles.error : undefined)} aria-live="polite">
         {statusLabel}
       </p>
     </section>

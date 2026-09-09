@@ -8,7 +8,7 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "allowJs": false,
+    "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "types": ["node"]
@@ -19,6 +19,13 @@
     "lab/src/**/*.ts",
     "lab/src/**/*.tsx",
     "lab/vite.config.ts",
+    "adventures/**/*.ts",
+    "adventures/**/*.tsx",
+    "site/**/*.ts",
+    "site/**/*.tsx",
+    "scripts/**/*.ts",
+    "adventures/**/*.ts",
+    "adventures/**/*.tsx",
     "tests/**/*.ts",
     "playwright.config.ts"
   ]
