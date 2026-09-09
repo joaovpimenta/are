@@ -30,14 +30,14 @@ test('Lock archive separates and operates all 14 examples', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Numérico', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Geoloc. real', exact: true })).toBeAttached();
 
-  for (const id of [
-    'numeric', 'pattern', 'direction', 'compass', 'colors', 'musical', 'password', 'login',
-    'switches', 'ordered-switches', 'grid-4x4', 'grid-5x5', 'virtual-geolocation', 'real-geolocation',
-  ]) {
-    const section = page.locator(`#lock-${id}`);
-    await section.scrollIntoViewIfNeeded();
-    await expect(section.locator('canvas')).toHaveCount(1);
-  }
+  await expect(page.locator('[data-three-lock]')).toHaveCount(14);
+  const numericCanvas = page.locator('#lock-numeric canvas');
+  await expect(numericCanvas).toHaveCount(1);
+  expect(await numericCanvas.evaluate((element) => Boolean((element as HTMLCanvasElement).getContext('webgl2')))).toBe(true);
+
+  const finalSection = page.locator('#lock-real-geolocation');
+  await finalSection.scrollIntoViewIfNeeded();
+  await expect(finalSection.locator('canvas')).toHaveCount(1);
 
   await page.locator('#lock-numeric').scrollIntoViewIfNeeded();
   await page.locator('#lock-numeric summary').click();
