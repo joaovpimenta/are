@@ -4,8 +4,11 @@ import { latestInteractionDebug } from '../helpers';
 
 async function dialCanvas(page: Page) {
   const canvas = page.getByLabel('Seletor de cofre 3D');
-  await canvas.scrollIntoViewIfNeeded();
-  await canvas.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await expect(canvas.locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
+  await canvas.evaluate(async (element) => {
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  });
   await expect(canvas).toBeVisible();
   return canvas;
 }
@@ -36,6 +39,10 @@ test('Dial raycasting reports canvas-relative NDC and local quadrants after page
     [0.42, 0.58, -1, -1],
     [0.42, 0.42, -1, 1],
   ] as const) {
+    // A lower-left sample can solve the dial and intentionally disable it.
+    // Each quadrant must start with an interactive mechanism.
+    await page.getByRole('button', { name: 'Resetar sessão' }).click();
+    await expect(page.locator('article output').first()).toHaveText('02');
     const { box } = await tapCanvas(page, xRatio, yRatio);
     const debug = await latestInteractionDebug(page);
     expect(debug).not.toBeNull();
@@ -75,21 +82,14 @@ test('Dial crosses the 0/360 seam in both directions', async ({ page }) => {
   const centerX = box!.x + box!.width / 2;
   const centerY = box!.y + box!.height / 2 + radius * 0.12;
   const y = centerY - radius;
+  const seamOffset = radius * 0.75;
+  const output = page.locator('output').first();
 
-  let positiveValue = '00';
-  let negativeValue = '00';
-  for (const factor of [0.38, 0.48, 0.58]) {
-    await page.touchscreen.tap(centerX + radius * factor, y);
-    positiveValue = (await page.locator('output').first().textContent()) ?? '00';
-    if (positiveValue === '01') break;
-  }
-  for (const factor of [0.38, 0.48, 0.58]) {
-    await page.touchscreen.tap(centerX - radius * factor, y);
-    negativeValue = (await page.locator('output').first().textContent()) ?? '00';
-    if (negativeValue === '09') break;
-  }
-  expect(positiveValue).toBe('01');
-  expect(negativeValue).toBe('09');
+  await page.touchscreen.tap(centerX + seamOffset, y);
+  await expect(output).toHaveText('01');
+
+  await page.touchscreen.tap(centerX - seamOffset, y);
+  await expect(output).toHaveText('09');
 });
 
 test('Dial supports clockwise/counter-clockwise drag, pointerup outside, cancel and lost capture recovery', async ({ page }) => {

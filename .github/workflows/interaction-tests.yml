@@ -62,7 +62,15 @@ jobs:
       - name: Install browser
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - name: Run pointer, touch, drag, scroll and raycast tests
-        run: pnpm test:interaction
+        # Firefox needs a display for WebGL; Xvfb and Mesa provide it on CI.
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          if [ "$ARE_BROWSER" = firefox ]; then
+            xvfb-run -a pnpm test:interaction --headed
+          else
+            pnpm test:interaction
+          fi
       - name: Record flaky tests separately
         if: always()
         run: node scripts/report-flaky.mjs playwright-report/results.json flaky-tests.txt
