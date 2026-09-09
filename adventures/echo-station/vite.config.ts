@@ -9,6 +9,9 @@ const stylexOptions = {
 
 export default defineConfig({
   base: './',
+  define: {
+    __ARE_INTERACTION_DEBUG__: 'false',
+  },
   plugins: [
     stylex.vite(stylexOptions as Parameters<typeof stylex.vite>[0]),
     react(),
@@ -17,5 +20,13 @@ export default defineConfig({
     outDir: '../../build/adventures/echo-station',
     emptyOutDir: true,
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/engine/src/')) return 'are-engine';
+          return undefined;
+        },
+      },
+    },
   },
 });

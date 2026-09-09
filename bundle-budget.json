@@ -1,0 +1,10 @@
+{
+  "softRatio": 0.85,
+  "budgets": {
+    "engine": 350000,
+    "site": 750000,
+    "lab": 5000000,
+    "adventure:echo-station": 4000000,
+    "total": 10000000
+  }
+}
