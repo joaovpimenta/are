@@ -75,3 +75,14 @@ export function allowsVerticalPageScroll(state: GestureState, sample: PointerSam
   const dy = Math.abs(sample.clientY - state.originY);
   return dy > dx * 1.2;
 }
+
+export function moveGestureRespectingPageScroll(
+  state: GestureState,
+  sample: PointerSample,
+  thresholdPx = DEFAULT_DRAG_THRESHOLD_PX,
+): GestureState {
+  if (state.phase === 'pending' && allowsVerticalPageScroll(state, sample)) {
+    return cancelGesture(moveGesture(state, sample, thresholdPx));
+  }
+  return moveGesture(state, sample, thresholdPx);
+}
