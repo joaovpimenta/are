@@ -24,8 +24,13 @@ declare global {
   }
 }
 
-export function interactionDebugEnabled(): boolean {
+function interactionInstrumentationEnabled(): boolean {
   return typeof __ARE_INTERACTION_DEBUG__ !== 'undefined' && __ARE_INTERACTION_DEBUG__ === true;
+}
+
+export function interactionDebugEnabled(): boolean {
+  if (!interactionInstrumentationEnabled() || typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('are-debug-hit-targets') === '1';
 }
 
 export function recordPointerDebug(
@@ -34,7 +39,7 @@ export function recordPointerDebug(
   hit: string,
   local?: LocalPoint,
 ): void {
-  if (!interactionDebugEnabled() || typeof window === 'undefined') return;
+  if (!interactionInstrumentationEnabled() || typeof window === 'undefined') return;
   const record: InteractionDebugRecord = {
     ...sample,
     hit,
