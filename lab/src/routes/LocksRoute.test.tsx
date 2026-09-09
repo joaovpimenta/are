@@ -6,6 +6,7 @@ import type { AdventureSession, AdventureSessionSnapshot } from '@are/engine/ses
 import { defaultTheme } from '@are/engine/theme';
 import { LAB_ENTRIES } from '../model';
 import { LocksRoute } from './LocksRoute';
+import { LOCK_PRESETS } from './lockPresets';
 
 vi.mock('@stylexjs/stylex', () => ({
   create: <Styles,>(styles: Styles) => styles,
@@ -32,6 +33,11 @@ describe('LocksRoute', () => {
     );
 
     expect(container.querySelectorAll('section[id^="lock-"]')).toHaveLength(14);
+    expect(container.querySelectorAll('[data-three-lock]')).toHaveLength(14);
+    for (const preset of LOCK_PRESETS) {
+      const section = container.querySelector<HTMLElement>(`#lock-${preset.definition.id}`)!;
+      expect(section.querySelector(`[data-three-lock="${preset.definition.kind}"]`)).not.toBeNull();
+    }
     expect(screen.getByRole('heading', { name: /^Numérico$/ })).toBeVisible();
     expect(screen.getByRole('heading', { name: /^Geoloc\. real$/ })).toBeVisible();
 

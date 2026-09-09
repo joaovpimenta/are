@@ -2,6 +2,8 @@ export { Keypad3D } from './components/keypad/Keypad3D';
 export { createKeypadMachine } from './components/keypad/keypadMachine';
 export { Dial3D } from './components/dial/Dial3D';
 export { LockPanel } from './components/locks/LockPanel';
+export { LockObject3D } from './components/locks/LockObject3D';
+export type { LockVisualStatus } from './components/locks/LockObject3D';
 export { TypedEventEmitter } from './core/events';
 export type { EventListener, EventMap, EventSubscription } from './core/events';
 export type { ModuleListener, ReadableModule, StatefulModule } from './core/module';

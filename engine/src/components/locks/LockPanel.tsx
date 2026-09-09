@@ -4,18 +4,20 @@ import type { MouseEvent, PointerEvent } from 'react';
 import { matchesLockInput, type LockDefinition, type LockValue } from '../../mechanisms/locks';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle } from '../../theme';
+import { LockObject3D, type LockVisualStatus } from './LockObject3D';
 
 type LockPanelProps = {
   definition: LockDefinition;
   theme: AreTheme;
   title?: string;
   resetKey?: number;
+  reducedMotion?: boolean;
   onSolved?: () => void;
   onActive?: () => void;
   onError?: () => void;
 };
 
-type LockStatus = 'pending' | 'active' | 'solved' | 'error';
+type LockStatus = LockVisualStatus;
 
 const focusRing = {
   outlineWidth: 3,
@@ -107,6 +109,16 @@ const styles = stylex.create({
   },
   feedback: { margin: 0, minHeight: 20, color: 'var(--object-muted)', fontSize: 13 },
   feedbackError: { color: 'var(--object-danger)' }, feedbackSolved: { color: 'var(--object-success)' },
+  fallback: {
+    borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--object-accent) 18%, transparent)',
+    borderRadius: 14, backgroundColor: 'color-mix(in srgb, var(--object-surface-raised) 58%, transparent)', overflow: 'hidden',
+  },
+  fallbackSummary: {
+    minHeight: 46, display: 'flex', alignItems: 'center', paddingInline: 14, color: 'var(--object-text)',
+    cursor: 'pointer', fontSize: 13, fontWeight: 850, touchAction: 'manipulation',
+    ':focus-visible': focusRing,
+  },
+  fallbackBody: { display: 'grid', gap: 12, padding: '4px 12px 12px' },
 });
 
 const labels: Record<LockDefinition['kind'], string> = {
@@ -170,7 +182,7 @@ function gridStyle(columns: number) {
   return styles.gridAuto;
 }
 
-export function LockPanel({ definition, theme, title, resetKey = 0, onSolved, onActive, onError }: LockPanelProps) {
+export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotion = false, onSolved, onActive, onError }: LockPanelProps) {
   const [text, setText] = useState('');
   const [secondaryText, setSecondaryText] = useState('');
   const [sequence, setSequence] = useState<string[]>([]);
@@ -199,6 +211,10 @@ export function LockPanel({ definition, theme, title, resetKey = 0, onSolved, on
   const choose = (value: string) => {
     if (status === 'solved') return;
     markActive();
+    if (definition.kind === 'numeric') {
+      setText((current) => current + value);
+      return;
+    }
     if (definition.kind === 'switches' || definition.kind === 'grid-4x4' || definition.kind === 'grid-5x5') {
       setSequence((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
       return;
@@ -231,6 +247,14 @@ export function LockPanel({ definition, theme, title, resetKey = 0, onSolved, on
     const bounds = event.currentTarget.getBoundingClientRect();
     const horizontal = (event.clientX - bounds.left) / bounds.width;
     const vertical = (event.clientY - bounds.top) / bounds.height;
+    const latitude = definition.location.latitude + (0.5 - vertical) * 0.04;
+    const longitude = definition.location.longitude + (horizontal - 0.5) * 0.04;
+    setCoordinates(`${latitude.toFixed(5)},${longitude.toFixed(5)}`);
+    markActive();
+  };
+
+  const chooseVirtualPoint = (horizontal: number, vertical: number) => {
+    if (status === 'solved' || !definition.location) return;
     const latitude = definition.location.latitude + (0.5 - vertical) * 0.04;
     const longitude = definition.location.longitude + (horizontal - 0.5) * 0.04;
     setCoordinates(`${latitude.toFixed(5)},${longitude.toFixed(5)}`);
@@ -322,6 +346,31 @@ export function LockPanel({ definition, theme, title, resetKey = 0, onSolved, on
         <span {...stylex.props(styles.status)} aria-live="polite">{status}</span>
       </div>
 
+      <LockObject3D
+        definition={definition}
+        theme={theme}
+        status={status}
+        text={text}
+        secondaryText={secondaryText}
+        sequence={sequence}
+        coordinates={coordinates}
+        options={options}
+        columns={columns}
+        reducedMotion={reducedMotion}
+        onChoose={choose}
+        onTextChange={(value) => { markActive(); setText(value); }}
+        onSecondaryTextChange={(value) => { markActive(); setSecondaryText(value); }}
+        onSubmit={submit}
+        onClear={clear}
+        onVirtualPoint={chooseVirtualPoint}
+        onReadDeviceLocation={readDeviceLocation}
+        onSelectTestLocation={selectTestLocation}
+      />
+
+      <details {...stylex.props(styles.fallback)}>
+        <summary {...stylex.props(styles.fallbackSummary)}>Controles alternativos acessíveis</summary>
+        <div {...stylex.props(styles.fallbackBody)}>
+
       {definition.kind === 'numeric' ? (
         <>
           <label {...stylex.props(styles.inputGroup)}>
@@ -389,6 +438,8 @@ export function LockPanel({ definition, theme, title, resetKey = 0, onSolved, on
         <button {...stylex.props(styles.submit)} type="button" onClick={submit} disabled={status === 'solved'}>Validar</button>
         <button {...stylex.props(styles.reset)} type="button" onClick={clear}>Limpar</button>
       </div>
+        </div>
+      </details>
       <p {...stylex.props(styles.feedback, status === 'error' ? styles.feedbackError : undefined, status === 'solved' ? styles.feedbackSolved : undefined)} role="status">{message}</p>
     </div>
   );

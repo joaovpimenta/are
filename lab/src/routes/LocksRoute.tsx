@@ -100,7 +100,7 @@ const styles = stylex.create({
   },
 });
 
-export function LocksRoute({ entry, theme, resetVersion, session, snapshot }: LabRouteProps) {
+export function LocksRoute({ entry, theme, reducedMotion, resetVersion, session, snapshot }: LabRouteProps) {
   const [solved, setSolved] = useState(() => new Set<string>());
   const status = snapshot.mechanismResults.locks ?? 'pending';
   const complete = solved.size === LOCK_PRESETS.length;
@@ -162,6 +162,7 @@ export function LocksRoute({ entry, theme, resetVersion, session, snapshot }: La
                   theme={theme}
                   title={`${preset.label} · console operacional`}
                   resetKey={resetVersion}
+                  reducedMotion={reducedMotion}
                   onActive={() => session.send({ type: 'MECHANISM_ACTIVE', mechanismId: 'locks' })}
                   onSolved={() => solve(preset.definition.id)}
                   onError={() => session.send({ type: 'MECHANISM_ERROR', mechanismId: 'locks' })}

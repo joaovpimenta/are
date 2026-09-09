@@ -25,11 +25,22 @@ test('Lab exposes all mechanisms as direct routes', async ({ page }) => {
 test('Lock archive separates and operates all 14 examples', async ({ page }) => {
   await page.goto('/lab/locks/');
 
-  await expect(page.getByRole('heading', { name: '14 cadeados interativos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '14 cadeados Three.js' })).toBeVisible();
   await expect(page.locator('section[id^="lock-"]')).toHaveCount(14);
   await expect(page.getByRole('heading', { name: 'Numérico', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Geoloc. real', exact: true })).toBeAttached();
 
+  for (const id of [
+    'numeric', 'pattern', 'direction', 'compass', 'colors', 'musical', 'password', 'login',
+    'switches', 'ordered-switches', 'grid-4x4', 'grid-5x5', 'virtual-geolocation', 'real-geolocation',
+  ]) {
+    const section = page.locator(`#lock-${id}`);
+    await section.scrollIntoViewIfNeeded();
+    await expect(section.locator('canvas')).toHaveCount(1);
+  }
+
+  await page.locator('#lock-numeric').scrollIntoViewIfNeeded();
+  await page.locator('#lock-numeric summary').click();
   await page.getByLabel('Código numérico').fill('1234');
   await page.locator('#lock-numeric').getByRole('button', { name: 'Validar' }).click();
   await expect(page.locator('#lock-numeric').getByText('Cadeado aberto. Solução confirmada.')).toBeVisible();

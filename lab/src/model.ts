@@ -157,14 +157,14 @@ export const LAB_ENTRIES: readonly LabEntry[] = [
   },
   {
     id: 'locks',
-    title: '14 cadeados interativos',
-    artifact: 'Arquivo de mecanismos digitais',
+    title: '14 cadeados Three.js',
+    artifact: 'Arquivo de mecanismos espaciais',
     family: 'Lógica / Interface',
-    description: 'Os 14 tipos da seção “Experimente você mesmo” aparecem como seções independentes, com mecânica, instrução e solução próprias.',
+    description: 'Os 14 tipos da seção “Experimente você mesmo” aparecem como objetos Three.js diegéticos em seções independentes, com mecânica, instrução e solução próprias.',
     instruction: 'Percorra as seções e resolva cada mecanismo com a solução de teste exibida ao lado dele.',
     solution: 'Complete as 14 seções; cada uma documenta sua própria solução de teste.',
     hints: ['Use o índice para saltar até um cadeado.', 'Cada seção explica a interação específica.', 'A solução assistida fica visível dentro da própria seção.'],
-    accessibility: 'Todos os cadeados funcionam por toque e teclado; áudio e GPS têm alternativas visuais ou simuladas no Lab.',
+    accessibility: 'Os objetos 3D funcionam por toque e ponteiro; um painel DOM recolhível preserva teclado e leitores de tela. Áudio e GPS têm alternativas visuais ou simuladas no Lab.',
   },
 ] as const;
 
