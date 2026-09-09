@@ -1,8 +1,19 @@
 import { Html, RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
-import type { Group } from 'three';
+import type { Group, Vector3 } from 'three';
+import {
+  beginGesture,
+  isTapGesture,
+  moveGestureRespectingPageScroll,
+  shouldCaptureAfterMove,
+  type GestureState,
+  type PointerSample,
+} from '../../input/gesture';
+import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
+import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialRotation, dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
@@ -36,6 +47,15 @@ type Dial3DProps = {
   disabled?: boolean;
 };
 
+function pointerSample(event: ThreeEvent<PointerEvent>): PointerSample {
+  return {
+    pointerId: event.pointerId,
+    pointerType: event.nativeEvent.pointerType,
+    clientX: event.nativeEvent.clientX,
+    clientY: event.nativeEvent.clientY,
+  };
+}
+
 export function Dial3D({
   value,
   target = 7,
@@ -46,31 +66,39 @@ export function Dial3D({
   reducedMotion = false,
   disabled = false,
 }: Dial3DProps) {
-  const group = useRef<Group>(null);
-  const dragging = useRef(false);
+  const dialSpace = useRef<Group>(null);
+  const rotor = useRef<Group>(null);
+  const gesture = useRef<GestureState | null>(null);
   const [hovered, setHovered] = useState(false);
   const solved = value === target;
   const range = max - min + 1;
   const targetRotation = dialRotation(value, { min, max });
   const palette = toThreeTheme(theme);
+  const debugHitTargets = interactionDebugEnabled();
 
   useFrame((_, delta) => {
-    if (!group.current) return;
-    if (reducedMotion) group.current.rotation.z = targetRotation;
-    else group.current.rotation.z += (targetRotation - group.current.rotation.z) * Math.min(1, delta * 9);
+    if (!rotor.current) return;
+    if (reducedMotion) rotor.current.rotation.z = targetRotation;
+    else rotor.current.rotation.z += (targetRotation - rotor.current.rotation.z) * Math.min(1, delta * 9);
     const targetScale = hovered ? 1.04 : 1;
     const next = reducedMotion
       ? targetScale
-      : group.current.scale.x + (targetScale - group.current.scale.x) * Math.min(1, delta * 12);
-    group.current.scale.setScalar(next);
+      : rotor.current.scale.x + (targetScale - rotor.current.scale.x) * Math.min(1, delta * 12);
+    rotor.current.scale.setScalar(next);
   });
 
   const step = (direction: number) => {
     if (!disabled) onChange(stepDialValue(value, direction, { min, max }));
   };
 
-  const readClockPoint = (x: number, y: number) => {
-    if (!disabled) onChange(dialValueFromClockPoint(x, y + 0.05, { min, max }));
+  const localPoint = (point: Vector3) => dialSpace.current?.worldToLocal(point.clone()) ?? point.clone();
+  const readLocalPoint = (point: Vector3) => {
+    if (!disabled) onChange(dialValueFromClockPoint(point.x, point.y, { min, max }));
+  };
+  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3) => {
+    const target = event.nativeEvent.target;
+    if (!(target instanceof Element)) return;
+    recordPointerDebug(pointerSample(event), target.getBoundingClientRect(), event.object.name || 'dial', local);
   };
 
   return (
@@ -89,63 +117,85 @@ export function Dial3D({
       <StatusLamp position={[1.72, -1.65, -0.24]} color={solved ? palette.success : palette.warning} active={solved} />
 
       <group
-        ref={group}
-        rotation={[0, 0, 0]}
+        ref={dialSpace}
         onPointerEnter={(event) => {
           event.stopPropagation();
-          setHovered(true);
+          if (!disabled) setHovered(true);
         }}
         onPointerLeave={() => setHovered(false)}
         onPointerDown={(event) => {
+          if (disabled) return;
           event.stopPropagation();
-          dragging.current = true;
-          readClockPoint(event.point.x, event.point.y);
-          const nativeTarget = event.nativeEvent.target;
-          if (nativeTarget instanceof Element) {
-            nativeTarget.setPointerCapture(event.pointerId);
-          }
+          gesture.current = beginGesture('rotate', pointerSample(event));
+          debug(event, localPoint(event.point));
         }}
         onPointerMove={(event) => {
-          if (!dragging.current) return;
-          event.stopPropagation();
-          readClockPoint(event.point.x, event.point.y);
-        }}
-        onPointerUp={(event) => {
-          event.stopPropagation();
-          dragging.current = false;
-          readClockPoint(event.point.x, event.point.y);
-          const nativeTarget = event.nativeEvent.target;
-          if (nativeTarget instanceof Element && nativeTarget.hasPointerCapture(event.pointerId)) {
-            nativeTarget.releasePointerCapture(event.pointerId);
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId || disabled) return;
+          const next = moveGestureRespectingPageScroll(current, pointerSample(event));
+          gesture.current = next;
+          if (next.phase === 'cancelled') return;
+          if (shouldCaptureAfterMove(current, next)) capturePointer(event.nativeEvent.target, event.pointerId);
+          if (next.phase === 'active') {
+            event.stopPropagation();
+            const local = localPoint(event.point);
+            readLocalPoint(local);
+            debug(event, local);
           }
         }}
-        onPointerCancel={() => {
-          dragging.current = false;
+        onPointerUp={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          if (current.phase === 'cancelled') {
+            releasePointer(event.nativeEvent.target, event.pointerId);
+            gesture.current = null;
+            return;
+          }
+          event.stopPropagation();
+          const local = localPoint(event.point);
+          if (!disabled && (current.phase === 'active' || isTapGesture(current))) readLocalPoint(local);
+          debug(event, local);
+          releasePointer(event.nativeEvent.target, event.pointerId);
+          gesture.current = null;
+        }}
+        onPointerCancel={(event) => {
+          releasePointer(event.nativeEvent.target, event.pointerId);
+          gesture.current = null;
+        }}
+        onLostPointerCapture={() => {
+          gesture.current = null;
         }}
         onWheel={(event) => {
+          if (disabled) return;
           event.stopPropagation();
           step(event.deltaY > 0 ? 1 : -1);
         }}
       >
-        <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[1.42, 1.62, 0.72, 64]} />
-          <meshStandardMaterial
-            color={hovered ? palette.housingRaised : palette.metal}
-            metalness={0.88}
-            roughness={0.18}
-            emissive={solved ? palette.success : palette.accent}
-            emissiveIntensity={solved ? 0.16 : hovered ? 0.08 : 0.02}
-          />
+        <mesh name="dial-hit-target" position={[0, 0, 0.27]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[1.72, 1.72, 0.24, 48]} />
+          <meshBasicMaterial color={palette.accent} transparent opacity={debugHitTargets ? 0.18 : 0} depthWrite={false} />
         </mesh>
-        {Array.from({ length: range }, (_, index) => {
-          const angle = index * ((Math.PI * 2) / range);
-          return (
-            <mesh key={index} position={[Math.sin(angle) * 1.31, Math.cos(angle) * 1.31, 0.39]} rotation={[0, 0, -angle]}>
-              <boxGeometry args={[0.055, 0.22, 0.08]} />
-              <meshStandardMaterial color={index === value - min ? palette.accent : palette.metalDark} emissive={palette.accent} emissiveIntensity={index === value - min ? 0.7 : 0.02} />
-            </mesh>
-          );
-        })}
+        <group ref={rotor} rotation={[0, 0, 0]}>
+          <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[1.42, 1.62, 0.72, 64]} />
+            <meshStandardMaterial
+              color={hovered ? palette.housingRaised : palette.metal}
+              metalness={0.88}
+              roughness={0.18}
+              emissive={solved ? palette.success : palette.accent}
+              emissiveIntensity={solved ? 0.16 : hovered ? 0.08 : 0.02}
+            />
+          </mesh>
+          {Array.from({ length: range }, (_, index) => {
+            const angle = index * ((Math.PI * 2) / range);
+            return (
+              <mesh key={index} position={[Math.sin(angle) * 1.31, Math.cos(angle) * 1.31, 0.39]} rotation={[0, 0, -angle]}>
+                <boxGeometry args={[0.055, 0.22, 0.08]} />
+                <meshStandardMaterial color={index === value - min ? palette.accent : palette.metalDark} emissive={palette.accent} emissiveIntensity={index === value - min ? 0.7 : 0.02} />
+              </mesh>
+            );
+          })}
+        </group>
       </group>
 
       <mesh position={[0, 1.78, 0.14]} rotation={[0, 0, Math.PI / 4]}>

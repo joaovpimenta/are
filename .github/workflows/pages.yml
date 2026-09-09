@@ -1,0 +1,42 @@
+name: ARE Pages
+
+on:
+  workflow_run:
+    workflows: [ARE CI]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: pages-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    name: deploy-pages
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download exact artifact validated by CI
+        uses: actions/download-artifact@v4
+        with:
+          name: site-build
+          path: dist
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Package validated artifact for Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Deploy exact validated artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

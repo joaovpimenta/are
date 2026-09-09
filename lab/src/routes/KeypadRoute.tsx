@@ -15,10 +15,7 @@ export function KeypadRoute({ entry, theme, reducedMotion, resetVersion, session
   const [keypad, send] = useMachine(machine);
   const status = keypad.value as 'idle' | 'typing' | 'error' | 'solved';
 
-  useEffect(() => {
-    send({ type: 'RESET' });
-  }, [resetVersion, send]);
-
+  useEffect(() => { send({ type: 'RESET' }); }, [resetVersion, send]);
   useEffect(() => {
     if (status === 'solved') session.send({ type: 'MECHANISM_SOLVED', mechanismId: 'keypad' });
     else if (status === 'error') session.send({ type: 'MECHANISM_ERROR', mechanismId: 'keypad' });
@@ -27,15 +24,17 @@ export function KeypadRoute({ entry, theme, reducedMotion, resetVersion, session
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (status === 'solved') return;
       if (/^[0-9]$/.test(event.key)) send({ type: 'PRESS', digit: event.key });
       else if (event.key === 'Enter') send({ type: 'SUBMIT' });
       else if (event.key === 'Backspace' || event.key === 'Escape') send({ type: 'CLEAR' });
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [send]);
+  }, [send, status]);
 
   const press = (label: string) => {
+    if (status === 'solved') return;
     if (label === 'C') send({ type: 'CLEAR' });
     else if (label === 'OK') send({ type: 'SUBMIT' });
     else send({ type: 'PRESS', digit: label });
@@ -46,7 +45,7 @@ export function KeypadRoute({ entry, theme, reducedMotion, resetVersion, session
       entry={entry}
       status={status}
       visual={<HardwareCanvas ariaLabel="Painel de acesso 3D"><Keypad3D value={keypad.context.value} status={status} theme={theme} reducedMotion={reducedMotion} onDigit={(digit) => send({ type: 'PRESS', digit })} onClear={() => send({ type: 'CLEAR' })} onSubmit={() => send({ type: 'SUBMIT' })} /></HardwareCanvas>}
-      controls={<div {...stylex.props(labStyles.keypadControls)}>{keys.map((label) => <button {...stylex.props(labStyles.controlButton)} key={label} type="button" onClick={() => press(label)}>{label}</button>)}</div>}
+      controls={<div {...stylex.props(labStyles.keypadControls)}>{keys.map((label) => <button {...stylex.props(labStyles.controlButton)} key={label} type="button" disabled={status === 'solved'} onClick={() => press(label)}>{label}</button>)}</div>}
       telemetry={<span>entrada={keypad.context.value || '----'}</span>}
     />
   );

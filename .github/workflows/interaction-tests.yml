@@ -1,0 +1,137 @@
+name: interaction-tests
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  NODE_VERSION: 22.13.0
+  PNPM_VERSION: 11.19.0
+
+jobs:
+  playwright:
+    name: ${{ matrix.browser }} · ${{ matrix.profile.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit, firefox]
+        profile:
+          - { name: mobile-320x568-dpr1, width: 320, height: 568, dpr: 1, mobile: 1 }
+          - { name: mobile-360x800-dpr2, width: 360, height: 800, dpr: 2, mobile: 1 }
+          - { name: mobile-390x844-dpr3, width: 390, height: 844, dpr: 3, mobile: 1 }
+          - { name: mobile-430x932-dpr3, width: 430, height: 932, dpr: 3, mobile: 1 }
+          - { name: tablet-portrait-768x1024-dpr2, width: 768, height: 1024, dpr: 2, mobile: 1 }
+          - { name: tablet-landscape-1024x768-dpr2, width: 1024, height: 768, dpr: 2, mobile: 1 }
+    env:
+      ARE_BROWSER: ${{ matrix.browser }}
+      ARE_PROFILE: ${{ matrix.profile.name }}
+      ARE_VIEWPORT_WIDTH: ${{ matrix.profile.width }}
+      ARE_VIEWPORT_HEIGHT: ${{ matrix.profile.height }}
+      ARE_DEVICE_SCALE_FACTOR: ${{ matrix.profile.dpr }}
+      ARE_HAS_TOUCH: '1'
+      ARE_IS_MOBILE: ${{ matrix.profile.mobile }}
+      ARE_PAGES_BASE_PATH: /are/
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck before browser tests
+        run: pnpm typecheck
+      - name: Run deterministic mechanisms and input primitives first
+        run: pnpm exec vitest run engine/src/mechanisms engine/src/input
+      - name: Download exact production candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: dist
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - name: Run pointer, touch, drag, scroll and raycast tests
+        run: pnpm test:interaction
+      - name: Record flaky tests separately
+        if: always()
+        run: node scripts/report-flaky.mjs playwright-report/results.json flaky-tests.txt
+      - name: Partition failure evidence by puzzle/gesture
+        if: always()
+        run: node scripts/partition-playwright-artifacts.mjs
+      - name: Upload HTML report by browser/viewport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-report-${{ matrix.browser }}-${{ matrix.profile.name }}
+          path: |
+            playwright-report
+            flaky-tests.txt
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Keypad failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-keypad
+          path: interaction-artifacts/keypad
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Dial failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-dial
+          path: interaction-artifacts/dial
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Signal Tuner failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-tuner
+          path: interaction-artifacts/tuner
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Lever failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-lever
+          path: interaction-artifacts/lever
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Cipher failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-cipher
+          path: interaction-artifacts/cipher
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Locks failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-locks
+          path: interaction-artifacts/locks
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload scroll/gesture failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-scroll
+          path: interaction-artifacts/scroll
+          if-no-files-found: ignore
+          retention-days: 14

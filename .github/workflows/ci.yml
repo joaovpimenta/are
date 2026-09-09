@@ -1,0 +1,218 @@
+name: ARE CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  NODE_VERSION: 22.13.0
+  PNPM_VERSION: 11.19.0
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+
+  unit-tests:
+    name: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ARE_INTERACTION_DEBUG: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Upload candidate site build
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build-candidate
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+
+  bundle-size:
+    name: bundle-size
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download candidate build
+        uses: actions/download-artifact@v4
+        with:
+          name: site-build-candidate
+          path: dist
+      - run: node scripts/check-bundle.mjs
+      - name: Upload bundle analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: bundle-report
+          if-no-files-found: error
+          retention-days: 14
+
+  interaction-tests:
+    name: interaction-tests
+    needs: build
+    uses: ./.github/workflows/interaction-tests.yml
+    with:
+      artifact-name: site-build-candidate
+    permissions:
+      contents: read
+      actions: read
+
+  smoke-tests:
+    name: smoke-tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARE_BROWSER: chromium
+      ARE_PROFILE: pages-smoke
+      ARE_VIEWPORT_WIDTH: '1280'
+      ARE_VIEWPORT_HEIGHT: '720'
+      ARE_DEVICE_SCALE_FACTOR: '1'
+      ARE_HAS_TOUCH: '0'
+      ARE_IS_MOBILE: '0'
+      ARE_PAGES_BASE_PATH: /are/
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck before browser tests
+        run: pnpm typecheck
+      - name: Run mechanism/input unit tests before browser tests
+        run: pnpm exec vitest run engine/src/mechanisms engine/src/input
+      - name: Download candidate build
+        uses: actions/download-artifact@v4
+        with:
+          name: site-build-candidate
+          path: dist
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run production Pages smoke tests
+        run: pnpm test:smoke
+      - name: Record flaky tests
+        if: always()
+        run: node scripts/report-flaky.mjs playwright-report/results.json flaky-tests.txt
+      - name: Upload smoke report and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-chromium-pages-smoke
+          path: |
+            playwright-report
+            test-results
+            flaky-tests.txt
+          if-no-files-found: ignore
+          retention-days: 14
+
+  ci-gate:
+    name: ci-gate
+    if: always()
+    needs: [lint, typecheck, unit-tests, build, bundle-size, interaction-tests, smoke-tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every quality job
+        env:
+          LINT: ${{ needs.lint.result }}
+          TYPECHECK: ${{ needs.typecheck.result }}
+          UNIT: ${{ needs.unit-tests.result }}
+          BUILD: ${{ needs.build.result }}
+          BUNDLE: ${{ needs.bundle-size.result }}
+          INTERACTION: ${{ needs.interaction-tests.result }}
+          SMOKE: ${{ needs.smoke-tests.result }}
+        run: |
+          for result in "$LINT" "$TYPECHECK" "$UNIT" "$BUILD" "$BUNDLE" "$INTERACTION" "$SMOKE"; do
+            test "$result" = success || exit 1
+          done
+
+  validated-site:
+    name: validated-site-artifact
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download exact validated candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: site-build-candidate
+          path: dist
+      - name: Promote exact validated bytes
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build
+          path: dist
+          if-no-files-found: error
+          retention-days: 7

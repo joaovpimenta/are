@@ -1,29 +1,52 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
+
+const browser = (process.env.ARE_BROWSER ?? 'chromium') as 'chromium' | 'webkit' | 'firefox';
+const profile = process.env.ARE_PROFILE ?? 'desktop';
+const width = Number(process.env.ARE_VIEWPORT_WIDTH ?? 1280);
+const height = Number(process.env.ARE_VIEWPORT_HEIGHT ?? 720);
+const dpr = Number(process.env.ARE_DEVICE_SCALE_FACTOR ?? 1);
+const hasTouch = process.env.ARE_HAS_TOUCH === '1';
+const mobileRequested = process.env.ARE_IS_MOBILE === '1';
+const reportDir = 'playwright-report';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'github' : 'list',
+  timeout: 30_000,
+  expect: { timeout: 7_500 },
+  outputDir: `test-results/${browser}-${profile}`,
+  reporter: process.env.CI
+    ? [
+        ['github'],
+        ['html', { open: 'never', outputFolder: reportDir }],
+        ['json', { outputFile: `${reportDir}/results.json` }],
+      ]
+    : 'list',
   use: {
     baseURL: 'http://127.0.0.1:4173',
-    trace: 'on-first-retry',
+    browserName: browser,
+    viewport: { width, height },
+    deviceScaleFactor: dpr,
+    hasTouch,
+    isMobile: mobileRequested && browser !== 'firefox',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    viewport: { width: 1280, height: 720 },
-    deviceScaleFactor: 1,
+    video: 'retain-on-failure',
     reducedMotion: 'no-preference',
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: `${browser}-${profile}`,
+      use: { browserName: browser },
     },
   ],
   webServer: {
-    command: 'pnpm build && pnpm exec vite preview --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173',
+    command: 'pnpm serve:dist',
+    url: 'http://127.0.0.1:4173/',
     reuseExistingServer: !process.env.CI,
+    timeout: 15_000,
   },
 });
