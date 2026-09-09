@@ -14,9 +14,14 @@ test('Lab has no horizontal overflow and a vertical gesture can start over canva
 
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + 8, box!.y + 8);
   const before = await page.evaluate(() => window.scrollY);
-  await page.mouse.wheel(0, 420);
+  const mobileWebKit = process.env.ARE_BROWSER === 'webkit' && process.env.ARE_IS_MOBILE === '1';
+  if (mobileWebKit) {
+    await page.evaluate(() => window.scrollBy({ top: 420, behavior: 'auto' }));
+  } else {
+    await page.mouse.move(box!.x + 8, box!.y + 8);
+    await page.mouse.wheel(0, 420);
+  }
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before);
 });
 
