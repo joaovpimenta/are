@@ -139,3 +139,38 @@ test('Cipher Rotor: invalid step, complete solution, disabled, navigation return
   await expect(rotor(1)).toHaveText('0');
   await expect(plus(1)).toBeEnabled();
 });
+
+test('Compass lock: device orientation registers eight-way headings without clicking direction controls', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'DeviceOrientationEvent', {
+      configurable: true,
+      value: class SyntheticDeviceOrientationEvent extends Event {},
+    });
+  });
+
+  await page.goto('/lab/locks/');
+  const section = page.locator('#lock-compass');
+  await section.scrollIntoViewIfNeeded();
+  const console = section.getByRole('group', { name: 'Bússola · console operacional' });
+  await expect(console.locator('canvas')).toHaveCount(1);
+  await expect(console.getByLabel('Entrada atual')).toContainText('Nenhuma posição selecionada.');
+
+  for (const heading of [0, 45, 90, 135]) {
+    await page.evaluate((magneticHeading) => {
+      const event = new Event('deviceorientationabsolute');
+      Object.defineProperties(event, {
+        alpha: { value: (360 - magneticHeading) % 360 },
+        absolute: { value: true },
+      });
+      window.dispatchEvent(event);
+    }, heading);
+    await page.waitForTimeout(720);
+  }
+
+  const current = console.getByLabel('Entrada atual');
+  await expect(current).toContainText('N');
+  await expect(current).toContainText('NE');
+  await expect(current).toContainText('E');
+  await expect(current).toContainText('SE');
+  await expect(console.getByRole('status')).toHaveText('Cadeado aberto. Solução confirmada.');
+});

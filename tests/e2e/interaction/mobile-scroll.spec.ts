@@ -12,14 +12,27 @@ test('Lab has no horizontal overflow and a vertical gesture can start over canva
   expect(overflow.scroll).toBeLessThanOrEqual(overflow.viewport);
   expect(overflow.touchAction).not.toBe('none');
 
+  // `isVisible()` only checks layout visibility; it does not guarantee that the
+  // element intersects a short mobile viewport. Put the canvas at the center so
+  // the real wheel gesture below always starts on an on-screen canvas point.
+  await canvas.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  const startX = Math.max(1, Math.min(viewport!.width - 2, box!.x + box!.width / 2));
+  const startY = Math.max(1, Math.min(viewport!.height - 2, box!.y + box!.height / 2));
+  const canvasAtStartPoint = await page.evaluate(({ x, y }) => (
+    document.elementsFromPoint(x, y).some((element) => element.tagName === 'CANVAS')
+  ), { x: startX, y: startY });
+  expect(canvasAtStartPoint).toBe(true);
+
   const before = await page.evaluate(() => window.scrollY);
   const mobileWebKit = process.env.ARE_BROWSER === 'webkit' && process.env.ARE_IS_MOBILE === '1';
   if (mobileWebKit) {
     await page.evaluate(() => window.scrollBy({ top: 420, behavior: 'auto' }));
   } else {
-    await page.mouse.move(box!.x + 8, box!.y + 8);
+    await page.mouse.move(startX, startY);
     await page.mouse.wheel(0, 420);
   }
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before);

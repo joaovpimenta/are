@@ -4,6 +4,12 @@ import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Group, Mesh } from 'three';
+import {
+  compassDirectionForHeading,
+  headingFromOrientation,
+  isCompassDirection,
+  isHeadingAligned,
+} from '../../input/deviceCompass';
 import type { LockDefinition } from '../../mechanisms/locks';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
@@ -96,6 +102,17 @@ const styles = stylex.create({
 
 const ReducedMotionContext = createContext(false);
 let cachedWebGlSupport: boolean | undefined;
+
+type CompassDeviceOrientationEvent = DeviceOrientationEvent & {
+  webkitCompassHeading?: number;
+  webkitCompassAccuracy?: number;
+};
+
+type DeviceOrientationPermissionConstructor = typeof DeviceOrientationEvent & {
+  requestPermission?: (absolute?: boolean) => Promise<'granted' | 'denied'>;
+};
+
+type CompassPermissionState = 'checking' | 'prompt' | 'granted' | 'denied' | 'unsupported';
 
 function supportsWebGl() {
   if (cachedWebGlSupport !== undefined) return cachedWebGlSupport;
@@ -316,29 +333,161 @@ function PatternLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
   );
 }
 
-function DirectionLock3D(props: LockObject3DProps & { palette: ThreeTheme; compass?: boolean }) {
-  const { palette, theme, sequence, status, onChoose, onSubmit, onClear, compass = false } = props;
-  const positions: Record<string, [number, number, number]> = compass
-    ? { N: [0, 0.95, 0.14], NE: [0.88, 0.67, 0.14], E: [1.25, 0, 0.14], SE: [0.88, -0.67, 0.14], S: [0, -0.95, 0.14], SO: [-0.88, -0.67, 0.14], O: [-1.25, 0, 0.14], NO: [-0.88, 0.67, 0.14] }
-    : { '↑': [0, 0.72, 0.14], '→': [0.82, 0, 0.14], '↓': [0, -0.72, 0.14], '←': [-0.82, 0, 0.14] };
+function DirectionLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
+  const { palette, theme, sequence, status, onChoose, onSubmit, onClear } = props;
+  const positions: Record<string, [number, number, number]> = {
+    '↑': [0, 0.72, 0.14], '→': [0.82, 0, 0.14], '↓': [0, -0.72, 0.14], '←': [-0.82, 0, 0.14],
+  };
 
   return (
     <DeviceHousing palette={palette} status={status}>
       <SequenceReadout sequence={sequence} theme={theme} />
       <mesh position={[0, 0, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[compass ? 1.62 : 1.34, compass ? 1.62 : 1.34, 0.16, 48]} />
+        <cylinderGeometry args={[1.34, 1.34, 0.16, 48]} />
         <meshStandardMaterial color={palette.metalDark} metalness={0.85} roughness={0.24} />
       </mesh>
       {props.options.map((option) => (
-        <PhysicalButton key={option} label={option} position={positions[option] ?? [0, 0, 0.14]} palette={palette} theme={theme} onPress={() => onChoose(option)} disabled={status === 'solved'} size={compass ? [0.58, 0.48, 0.2] : [0.68, 0.58, 0.22]} />
+        <PhysicalButton key={option} label={option} position={positions[option] ?? [0, 0, 0.14]} palette={palette} theme={theme} onPress={() => onChoose(option)} disabled={status === 'solved'} size={[0.68, 0.58, 0.22]} />
       ))}
-      {compass ? (
-        <mesh position={[0, 0, 0.27]} rotation={[0, 0, -Math.PI / 5]}>
-          <coneGeometry args={[0.16, 0.82, 3]} />
-          <meshStandardMaterial color={palette.danger} emissive={palette.danger} emissiveIntensity={0.35} metalness={0.48} roughness={0.3} />
-        </mesh>
-      ) : null}
       <ActionBar palette={palette} theme={theme} status={status} onSubmit={onSubmit} onClear={onClear} />
+    </DeviceHousing>
+  );
+}
+
+function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
+  const { palette, theme, sequence, status, onChoose, onSubmit, onClear } = props;
+  const [permission, setPermission] = useState<CompassPermissionState>('checking');
+  const [heading, setHeading] = useState<number | null>(null);
+  const solution = useMemo(
+    () => Array.isArray(props.definition.solution)
+      ? props.definition.solution.filter((value): value is string => typeof value === 'string' && isCompassDirection(value))
+      : [],
+    [props.definition.solution],
+  );
+  const nextTarget = solution[sequence.length] ?? null;
+  const alignedTarget = heading !== null && nextTarget && isCompassDirection(nextTarget) && isHeadingAligned(heading, nextTarget, 15)
+    ? nextTarget
+    : null;
+  const currentDirection = heading === null ? null : compassDirectionForHeading(heading);
+  const needleRotation = heading === null ? 0 : heading * Math.PI / 180;
+  const directionPositions: Record<string, [number, number, number]> = {
+    N: [0, 1.08, 0.19], NE: [0.78, 0.78, 0.19], E: [1.1, 0, 0.19], SE: [0.78, -0.78, 0.19],
+    S: [0, -1.08, 0.19], SO: [-0.78, -0.78, 0.19], O: [-1.1, 0, 0.19], NO: [-0.78, 0.78, 0.19],
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const constructor = (window as typeof window & { DeviceOrientationEvent?: DeviceOrientationPermissionConstructor }).DeviceOrientationEvent;
+    if (!constructor) {
+      setPermission('unsupported');
+      return;
+    }
+    setPermission(typeof constructor.requestPermission === 'function' ? 'prompt' : 'granted');
+  }, []);
+
+  useEffect(() => {
+    if (permission !== 'granted' || typeof window === 'undefined') return;
+    const handleOrientation = (rawEvent: Event) => {
+      const event = rawEvent as CompassDeviceOrientationEvent;
+      const screenAngle = window.screen.orientation?.angle ?? 0;
+      const nextHeading = headingFromOrientation({
+        alpha: event.alpha,
+        absolute: event.absolute,
+        webkitCompassHeading: event.webkitCompassHeading,
+        webkitCompassAccuracy: event.webkitCompassAccuracy,
+      }, screenAngle);
+      if (nextHeading !== null) setHeading(nextHeading);
+    };
+
+    window.addEventListener('deviceorientationabsolute', handleOrientation);
+    window.addEventListener('deviceorientation', handleOrientation);
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation);
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, [permission]);
+
+  useEffect(() => {
+    if (!alignedTarget || status === 'solved') return;
+    const timer = window.setTimeout(() => onChoose(alignedTarget), 650);
+    return () => window.clearTimeout(timer);
+  }, [alignedTarget, onChoose, status]);
+
+  useEffect(() => {
+    if (status === 'solved' || solution.length === 0 || sequence.length !== solution.length) return;
+    if (!sequence.every((value, index) => value === solution[index])) return;
+    const timer = window.setTimeout(onSubmit, 250);
+    return () => window.clearTimeout(timer);
+  }, [onSubmit, sequence, solution, status]);
+
+  const requestCompass = async () => {
+    if (typeof window === 'undefined') return;
+    const constructor = (window as typeof window & { DeviceOrientationEvent?: DeviceOrientationPermissionConstructor }).DeviceOrientationEvent;
+    if (!constructor) {
+      setPermission('unsupported');
+      return;
+    }
+    if (typeof constructor.requestPermission !== 'function') {
+      setPermission('granted');
+      return;
+    }
+    try {
+      const result = await constructor.requestPermission(true);
+      setPermission(result === 'granted' ? 'granted' : 'denied');
+    } catch {
+      setPermission('denied');
+    }
+  };
+
+  const readout = permission === 'prompt'
+    ? 'PERMISSÃO NECESSÁRIA · MAGNETÔMETRO'
+    : permission === 'denied'
+      ? 'PERMISSÃO NEGADA · USE O CONTROLE ALTERNATIVO'
+      : permission === 'unsupported'
+        ? 'BÚSSOLA INDISPONÍVEL · USE O CONTROLE ALTERNATIVO'
+        : heading === null
+          ? 'AGUARDANDO NORTE MAGNÉTICO…'
+          : `${Math.round(heading).toString().padStart(3, '0')}° · ${currentDirection} · ALVO ${nextTarget ?? 'CONCLUÍDO'}`;
+
+  return (
+    <DeviceHousing palette={palette} status={status}>
+      <SequenceReadout sequence={sequence} theme={theme} />
+      <mesh position={[0, 0, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[1.5, 1.5, 0.18, 64]} />
+        <meshStandardMaterial color={palette.metalDark} metalness={0.86} roughness={0.23} />
+      </mesh>
+      <mesh position={[0, 0, 0.13]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.27, 0.035, 16, 64]} />
+        <meshStandardMaterial color={palette.metalLight} metalness={0.92} roughness={0.18} />
+      </mesh>
+      {Object.entries(directionPositions).map(([direction, position]) => (
+        <Html key={direction} transform center position={position} distanceFactor={6.7}>
+          <span
+            {...stylex.props(styles.buttonLabel)}
+            style={{ ...toObjectThemeStyle(theme), color: direction === nextTarget ? theme.accent : theme.text }}
+          >{direction}</span>
+        </Html>
+      ))}
+      <group position={[0, 0, 0.3]} rotation={[0, 0, needleRotation]}>
+        <mesh position={[0, 0.43, 0]}>
+          <coneGeometry args={[0.15, 0.82, 3]} />
+          <meshStandardMaterial color={palette.danger} emissive={palette.danger} emissiveIntensity={0.42} metalness={0.48} roughness={0.3} />
+        </mesh>
+        <mesh position={[0, -0.39, 0]} rotation={[0, 0, Math.PI]}>
+          <coneGeometry args={[0.12, 0.7, 3]} />
+          <meshStandardMaterial color={palette.metalLight} metalness={0.88} roughness={0.22} />
+        </mesh>
+      </group>
+      <mesh position={[0, 0, 0.36]}>
+        <sphereGeometry args={[0.12, 24, 24]} />
+        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.22} metalness={0.9} roughness={0.18} />
+      </mesh>
+      <LabelPlate position={[0, -1.38, 0.18]} theme={theme} width={2.8}>{readout}</LabelPlate>
+      {permission === 'prompt' ? (
+        <PhysicalButton label="ATIVAR BÚSSOLA" position={[0, -1.78, 0.12]} palette={palette} theme={theme} onPress={() => void requestCompass()} disabled={status === 'solved'} active size={[1.8, 0.48, 0.2]} />
+      ) : (
+        <PhysicalButton label="LIMPAR" position={[0, -1.78, 0.12]} palette={palette} theme={theme} onPress={onClear} disabled={false} size={[1.28, 0.48, 0.2]} />
+      )}
     </DeviceHousing>
   );
 }
@@ -591,7 +740,7 @@ function LockSceneContent(props: LockObject3DProps) {
   }
   if (props.definition.kind === 'pattern') return <PatternLock3D {...common} />;
   if (props.definition.kind === 'direction') return <DirectionLock3D {...common} />;
-  if (props.definition.kind === 'compass') return <DirectionLock3D {...common} compass />;
+  if (props.definition.kind === 'compass') return <CompassLock3D {...common} />;
   if (props.definition.kind === 'colors') return <ColorLock3D {...common} />;
   if (props.definition.kind === 'musical') return <PianoLock3D {...common} />;
   if (props.definition.kind === 'password') return <TerminalLock3D {...common} />;
