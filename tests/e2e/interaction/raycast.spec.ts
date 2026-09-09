@@ -4,8 +4,12 @@ import { latestInteractionDebug } from '../helpers';
 
 async function dialCanvas(page: Page) {
   const canvas = page.getByLabel('Seletor de cofre 3D');
+  await expect(canvas.locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
   await canvas.scrollIntoViewIfNeeded();
-  await canvas.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await canvas.evaluate(async (element) => {
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  });
   await expect(canvas).toBeVisible();
   return canvas;
 }
@@ -36,6 +40,10 @@ test('Dial raycasting reports canvas-relative NDC and local quadrants after page
     [0.42, 0.58, -1, -1],
     [0.42, 0.42, -1, 1],
   ] as const) {
+    // A lower-left sample can solve the dial and intentionally disable it.
+    // Each quadrant must start with an interactive mechanism.
+    await page.getByRole('button', { name: 'Resetar sessão' }).click();
+    await expect(page.locator('article output').first()).toHaveText('02');
     const { box } = await tapCanvas(page, xRatio, yRatio);
     const debug = await latestInteractionDebug(page);
     expect(debug).not.toBeNull();

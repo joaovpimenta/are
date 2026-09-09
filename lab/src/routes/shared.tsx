@@ -1,5 +1,12 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import type { ReactNode } from 'react';
+
+function SceneReady() {
+  useFrame(({ gl }) => {
+    gl.domElement.dataset.sceneReady = 'true';
+  });
+  return null;
+}
 
 export function SceneLighting() {
   return (
@@ -31,7 +38,7 @@ export function HardwareCanvas({
     >
       <SceneLighting />
       {children}
+      <SceneReady />
     </Canvas>
   );
 }
-
