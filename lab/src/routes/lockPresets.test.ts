@@ -14,4 +14,13 @@ describe('lock presets', () => {
       expect(preset.instruction.length).toBeGreaterThan(0);
     }
   });
+
+  it('defines the compass as a physical magnetic-orientation puzzle', () => {
+    const compass = LOCK_PRESETS.find((preset) => preset.definition.kind === 'compass');
+    expect(compass).toBeDefined();
+    expect(compass?.description).toContain('norte magnético');
+    expect(compass?.instruction).toContain('gire o aparelho');
+    expect(compass?.instruction).toContain('registrar automaticamente');
+    expect(compass?.definition.solution).toEqual(['N', 'NE', 'E', 'SE']);
+  });
 });
