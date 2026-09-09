@@ -1,8 +1,11 @@
 import { Html, RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
 import type { Mesh } from 'three';
+import { beginGesture, isTapGesture, moveGesture, type GestureState, type PointerSample } from '../../input/gesture';
+import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
 import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
@@ -50,25 +53,39 @@ type KeyButtonProps = {
   onPress: (label: string) => void;
 };
 
+function pointerSample(event: ThreeEvent<PointerEvent>): PointerSample {
+  return {
+    pointerId: event.pointerId,
+    pointerType: event.nativeEvent.pointerType,
+    clientX: event.nativeEvent.clientX,
+    clientY: event.nativeEvent.clientY,
+  };
+}
+
 function KeyButton({ label, position, theme, disabled, reducedMotion = false, onPress }: KeyButtonProps) {
   const mesh = useRef<Mesh>(null);
+  const gesture = useRef<GestureState | null>(null);
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const debugHitTargets = interactionDebugEnabled();
 
   useFrame((_, delta) => {
     if (!mesh.current) return;
     const targetZ = pressed ? -0.08 : hovered ? 0.08 : 0;
-    mesh.current.position.z = reducedMotion
-      ? targetZ
-      : mesh.current.position.z + (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
+    mesh.current.position.z = reducedMotion ? targetZ : mesh.current.position.z + (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
   });
+
+  const debug = (event: ThreeEvent<PointerEvent>) => {
+    const target = event.nativeEvent.target;
+    if (!(target instanceof Element)) return;
+    recordPointerDebug(pointerSample(event), target.getBoundingClientRect(), event.object.name || `keypad-${label}`);
+  };
 
   return (
     <group position={position}>
       <mesh
-        ref={mesh}
-        castShadow
-        receiveShadow
+        name={`keypad-${label}-hit-target`}
+        position={[0, 0, 0.21]}
         onPointerEnter={(event) => {
           event.stopPropagation();
           if (!disabled) setHovered(true);
@@ -76,18 +93,40 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
         onPointerLeave={() => {
           setHovered(false);
           setPressed(false);
+          gesture.current = null;
         }}
         onPointerDown={(event) => {
+          if (disabled) return;
           event.stopPropagation();
-          if (!disabled) setPressed(true);
+          gesture.current = beginGesture('press', pointerSample(event));
+          setPressed(true);
+          debug(event);
+        }}
+        onPointerMove={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          const next = moveGesture(current, pointerSample(event));
+          gesture.current = next;
+          if (next.phase === 'cancelled') setPressed(false);
         }}
         onPointerUp={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
           event.stopPropagation();
-          if (disabled) return;
           setPressed(false);
-          onPress(label);
+          debug(event);
+          if (!disabled && isTapGesture(current)) onPress(label);
+          gesture.current = null;
+        }}
+        onPointerCancel={() => {
+          setPressed(false);
+          gesture.current = null;
         }}
       >
+        <boxGeometry args={[0.82, 0.64, 0.26]} />
+        <meshBasicMaterial color={theme.accent} transparent opacity={debugHitTargets ? 0.16 : 0} depthWrite={false} />
+      </mesh>
+      <mesh ref={mesh} castShadow receiveShadow>
         <boxGeometry args={[0.72, 0.54, 0.22]} />
         <meshStandardMaterial
           color={hovered ? theme.accentSoft : theme.surfaceRaised}
@@ -152,24 +191,12 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, red
         <div {...stylex.props(styles.display)} style={toObjectThemeStyle(theme)}>{value.padEnd(4, '·')}</div>
       </Html>
 
-      {keys.flatMap((row, rowIndex) =>
-        row.map((label, colIndex) => {
-          const x = (colIndex - 1) * 0.9;
-          const y = 0.72 - rowIndex * 0.72;
-          const handler = label === 'C' ? onClear : label === 'OK' ? onSubmit : () => onDigit(label);
-          return (
-            <KeyButton
-              key={label}
-              label={label}
-              position={[x, y, 0.07]}
-              theme={theme}
-              disabled={status === 'solved'}
-              reducedMotion={reducedMotion}
-              onPress={handler}
-            />
-          );
-        }),
-      )}
+      {keys.flatMap((row, rowIndex) => row.map((label, colIndex) => {
+        const x = (colIndex - 1) * 0.9;
+        const y = 0.72 - rowIndex * 0.72;
+        const handler = label === 'C' ? onClear : label === 'OK' ? onSubmit : () => onDigit(label);
+        return <KeyButton key={label} label={label} position={[x, y, 0.07]} theme={theme} disabled={status === 'solved'} reducedMotion={reducedMotion} onPress={handler} />;
+      }))}
 
       <pointLight position={[0, 1.5, 1.2]} color={accent} intensity={status === 'idle' ? 0.45 : 1.05} distance={5} />
     </group>
