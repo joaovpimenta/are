@@ -34,8 +34,8 @@ export type { DialogueState } from './mechanisms/dialogue';
 export { createSequenceState, transitionSequence } from './mechanisms/sequence';
 export type { SequenceEvent, SequenceState, SequenceStatus } from './mechanisms/sequence';
 export { createSwitchValues, matchesSwitchSolution, toggleSwitch } from './mechanisms/switches';
-export { matchesLockSolution, normalizeLockScalar } from './mechanisms/locks';
-export type { LockDefinition, LockValue } from './mechanisms/locks';
+export { matchesLockInput, matchesLockSolution, normalizeLockScalar } from './mechanisms/locks';
+export type { LockDefinition, LockLocation, LockValue } from './mechanisms/locks';
 export {
   amberTheme,
   defaultTheme,

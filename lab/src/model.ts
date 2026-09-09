@@ -157,14 +157,14 @@ export const LAB_ENTRIES: readonly LabEntry[] = [
   },
   {
     id: 'locks',
-    title: 'Crack & Reveal locks',
-    artifact: 'Banco de cadeados digitais',
+    title: '14 cadeados interativos',
+    artifact: 'Arquivo de mecanismos digitais',
     family: 'Lógica / Interface',
-    description: 'Família configurável que reproduz os 14 tipos de cadeado da seção “Experimente você mesmo” como primitivas reutilizáveis da ARE.',
-    instruction: 'Escolha um preset, resolva-o e avance até completar os 14 tipos.',
-    solution: 'A solução muda conforme o preset selecionado e aparece nesta página.',
-    hints: ['Troque o tipo no seletor.', 'Cada preset possui uma resposta objetiva.', 'Use a solução de teste exibida para validar todos os 14.'],
-    accessibility: 'Controles nativos, foco por teclado, Enter para validar texto e estados anunciados em aria-live.',
+    description: 'Os 14 tipos da seção “Experimente você mesmo” aparecem como seções independentes, com mecânica, instrução e solução próprias.',
+    instruction: 'Percorra as seções e resolva cada mecanismo com a solução de teste exibida ao lado dele.',
+    solution: 'Complete as 14 seções; cada uma documenta sua própria solução de teste.',
+    hints: ['Use o índice para saltar até um cadeado.', 'Cada seção explica a interação específica.', 'A solução assistida fica visível dentro da própria seção.'],
+    accessibility: 'Todos os cadeados funcionam por toque e teclado; áudio e GPS têm alternativas visuais ou simuladas no Lab.',
   },
 ] as const;
 

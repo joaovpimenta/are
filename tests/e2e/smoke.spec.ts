@@ -22,6 +22,19 @@ test('Lab exposes all mechanisms as direct routes', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Aumentar rotor 1' })).toBeEnabled();
 });
 
+test('Lock archive separates and operates all 14 examples', async ({ page }) => {
+  await page.goto('/lab/locks/');
+
+  await expect(page.getByRole('heading', { name: '14 cadeados interativos' })).toBeVisible();
+  await expect(page.locator('section[id^="lock-"]')).toHaveCount(14);
+  await expect(page.getByRole('heading', { name: 'Numérico', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Geoloc. real', exact: true })).toBeAttached();
+
+  await page.getByLabel('Código numérico').fill('1234');
+  await page.locator('#lock-numeric').getByRole('button', { name: 'Validar' }).click();
+  await expect(page.locator('#lock-numeric').getByText('Cadeado aberto. Solução confirmada.')).toBeVisible();
+});
+
 test('Lab input updates the shared session status', async ({ page }) => {
   await page.goto('/lab/keypad/');
   await expect(page.getByRole('heading', { name: 'Keypad' })).toBeVisible();
