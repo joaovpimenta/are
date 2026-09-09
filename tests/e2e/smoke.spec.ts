@@ -24,6 +24,7 @@ test('Lab exposes all mechanisms as direct routes', async ({ page }) => {
 
 test('Lab input updates the shared session status', async ({ page }) => {
   await page.goto('/lab/keypad/');
+  await expect(page.getByRole('heading', { name: 'Keypad' })).toBeVisible();
   await page.keyboard.type('1984');
   await page.keyboard.press('Enter');
 
