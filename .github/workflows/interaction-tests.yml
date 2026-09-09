@@ -66,14 +66,72 @@ jobs:
       - name: Record flaky tests separately
         if: always()
         run: node scripts/report-flaky.mjs playwright-report/results.json flaky-tests.txt
-      - name: Upload browser/viewport interaction artifacts
+      - name: Partition failure evidence by puzzle/gesture
+        if: always()
+        run: node scripts/partition-playwright-artifacts.mjs
+      - name: Upload HTML report by browser/viewport
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}
+          name: interaction-report-${{ matrix.browser }}-${{ matrix.profile.name }}
           path: |
             playwright-report
-            test-results
             flaky-tests.txt
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Keypad failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-keypad
+          path: interaction-artifacts/keypad
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Dial failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-dial
+          path: interaction-artifacts/dial
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Signal Tuner failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-tuner
+          path: interaction-artifacts/tuner
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Lever failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-lever
+          path: interaction-artifacts/lever
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Cipher failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-cipher
+          path: interaction-artifacts/cipher
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload Locks failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-locks
+          path: interaction-artifacts/locks
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload scroll/gesture failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-scroll
+          path: interaction-artifacts/scroll
           if-no-files-found: ignore
           retention-days: 14
