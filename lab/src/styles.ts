@@ -74,6 +74,18 @@ export const labStyles = stylex.create({
       '@media (max-width: 640px)': 1.55,
     },
   },
+  testHint: {
+    margin: '10px 0 0',
+    padding: 10,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'color-mix(in srgb, var(--are-accent) 24%, transparent)',
+    borderRadius: 10,
+    color: 'var(--are-text)',
+    backgroundColor: 'color-mix(in srgb, var(--are-accent-soft) 42%, transparent)',
+    fontSize: 12,
+    lineHeight: 1.5,
+  },
   toolbar: {
     display: 'flex',
     width: {
@@ -319,6 +331,18 @@ export const objectStyles = stylex.create({
   note: {
     margin: 0,
     color: 'var(--are-muted)',
+    fontSize: 12,
+    lineHeight: 1.5,
+  },
+  solution: {
+    margin: 0,
+    padding: 10,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'color-mix(in srgb, var(--are-accent) 30%, transparent)',
+    borderRadius: 10,
+    color: 'var(--are-text)',
+    backgroundColor: 'color-mix(in srgb, var(--are-accent-soft) 34%, transparent)',
     fontSize: 12,
     lineHeight: 1.5,
   },

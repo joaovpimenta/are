@@ -115,6 +115,9 @@ export function App() {
             <p {...stylex.props(labStyles.subtitle)}>
               Primeiro vertical slice do engine: componentes reutilizáveis em Three.js/R3F, composição React, UI em StyleX, máquina de comportamento XState e estado compartilhado em Zustand.
             </p>
+            <p {...stylex.props(labStyles.testHint)}>
+              As linhas “Solução de teste” são dicas visíveis apenas no Lab para validar rapidamente cada componente.
+            </p>
           </div>
           <div {...stylex.props(labStyles.toolbar)}>
             <button
@@ -152,7 +155,7 @@ export function App() {
               </Canvas>
             </div>
             <div {...stylex.props(labStyles.cardFooter)}>
-              <span>Código de teste: <strong>1984</strong></span>
+              <span><strong>Solução de teste:</strong> digite <strong>1984</strong> e pressione OK.</span>
               <span {...stylex.props(labStyles.status)}>{keypad.context.value || '----'}</span>
             </div>
           </article>
@@ -171,7 +174,7 @@ export function App() {
               </Canvas>
             </div>
             <div {...stylex.props(labStyles.cardFooter, dialStyles.footer)}>
-              <span>Gire o aro como um relógio: arraste ou toque. Alvo: <strong>07</strong></span>
+              <span><strong>Solução de teste:</strong> ajuste para <strong>07</strong>; arraste como um relógio ou use +/−.</span>
               <div {...stylex.props(dialStyles.controls)} aria-label="Controles do dial">
                 <button
                   {...stylex.props(labStyles.interactiveButton, dialStyles.stepButton)}
@@ -213,6 +216,7 @@ export function App() {
                   addItem(item.id);
                 }}
               />
+              <p {...stylex.props(objectStyles.solution)}><strong>Solução de teste:</strong> selecione e colete os 3 itens — Chave de latão, Rolo de filme e Planta dobrada.</p>
               <p {...stylex.props(objectStyles.note)}>Toque em um objeto para guardá-lo e inspecioná-lo.</p>
             </div>
           </article>
@@ -232,6 +236,7 @@ export function App() {
                   setFlag('dialogueCompleted');
                 }}
               />
+              <p {...stylex.props(objectStyles.solution)}><strong>Solução de teste:</strong> avance pelas 2 falas e pressione “Concluir”.</p>
             </div>
           </article>
 
@@ -252,6 +257,7 @@ export function App() {
                 }}
                 onError={() => setFeedbackStatus('error')}
               />
+              <p {...stylex.props(objectStyles.solution)}><strong>Solução de teste:</strong> ◼ → ◇ → △ → ✦.</p>
               <p {...stylex.props(objectStyles.note)}>Reproduza a ordem descoberta na planta.</p>
             </div>
           </article>
@@ -272,6 +278,7 @@ export function App() {
                   setFlag('switchesSolved');
                 }}
               />
+              <p {...stylex.props(objectStyles.solution)}><strong>Solução de teste:</strong> NORTE ligado, LESTE desligado, SUL ligado, OESTE desligado.</p>
               <p {...stylex.props(objectStyles.note)}>Alinhe os interruptores com a direção indicada.</p>
             </div>
           </article>
@@ -293,6 +300,7 @@ export function App() {
                   setFlag('clueRevealed');
                 }}
               />
+              <p {...stylex.props(objectStyles.solution)}><strong>Solução de teste:</strong> pressione “Revelar pista”; o resultado esperado é 07.</p>
             </div>
           </article>
 
@@ -309,6 +317,7 @@ export function App() {
                 message={allObjectsSolved ? 'Todos os objetos confirmaram a próxima etapa.' : undefined}
                 onReset={reset}
               />
+              <p {...stylex.props(objectStyles.solution)}><strong>Solução de teste:</strong> para sucesso, conclua Dialogue, Sequence input, Switch group e Reveal / Clue. Para erro, tente uma sequência incorreta.</p>
             </div>
           </article>
         </section>

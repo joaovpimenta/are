@@ -18,6 +18,23 @@ test('Lab renders keypad and dial canvases', async ({ page }) => {
   await expect(page.getByText('dialSolved=false')).toBeVisible();
 });
 
+test('Lab displays the solution hints for component testing', async ({ page }) => {
+  await page.goto('/lab/');
+
+  for (const hint of [
+    'digite 1984',
+    'ajuste para 07',
+    'colete os 3 itens',
+    'avance pelas 2 falas',
+    '◼ → ◇ → △ → ✦',
+    'NORTE ligado',
+    'pressione “Revelar pista”',
+    'para sucesso, conclua Dialogue',
+  ]) {
+    await expect(page.getByText(hint, { exact: false })).toBeVisible();
+  }
+});
+
 test('Lab remains usable at a mobile viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/lab/');
