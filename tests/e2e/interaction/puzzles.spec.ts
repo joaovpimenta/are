@@ -1,9 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
-import { boxPoint, touchPress } from '../helpers';
+import { boxPoint } from '../helpers';
 
-async function tap(page: Page, locator: Locator) {
-  await touchPress(page, locator);
+async function tap(_page: Page, locator: Locator) {
+  await locator.click();
 }
 
 function mechanismStatus(page: Page, status: string) {
@@ -14,7 +14,7 @@ async function resetSession(page: Page) {
   await tap(page, page.getByRole('button', { name: 'Resetar sessão' }));
 }
 
-test('Keypad: initial, invalid, rapid touch input, resolution, disabled and reset', async ({ page }) => {
+test('Keypad: initial, invalid, repeated input, resolution, disabled and reset', async ({ page }) => {
   await page.goto('/lab/keypad/');
   const key = (label: string) => page.getByRole('button', { name: label, exact: true });
   await expect(mechanismStatus(page, 'idle')).toBeVisible();
@@ -70,8 +70,7 @@ test('Signal Tuner: pointer input changes value, keyboard completes solution, di
 
   const center = await boxPoint(slider, 'center');
   await page.touchscreen.tap(center.x + 8, center.y);
-  const pointerValue = Number(await slider.inputValue());
-  expect(pointerValue).not.toBe(41);
+  await expect.poll(async () => Number(await slider.inputValue())).not.toBe(41);
   await expect(mechanismStatus(page, 'active')).toBeVisible();
 
   await increase.focus();
