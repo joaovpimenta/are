@@ -1,0 +1,7 @@
+{
+  "id": "echo-station",
+  "title": "Echo Station",
+  "description": "Restaure uma transmissão abandonada e decifre o último arquivo da operadora.",
+  "package": "@are/adventure-echo-station",
+  "entry": "src/main.tsx"
+}

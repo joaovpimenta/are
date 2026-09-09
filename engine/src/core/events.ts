@@ -20,8 +20,7 @@ export class TypedEventEmitter<Events extends EventMap> {
   }
 
   once<Key extends keyof Events>(event: Key, listener: EventListener<Events[Key]>): EventSubscription {
-    let subscription: EventSubscription;
-    subscription = this.on(event, (payload) => {
+    const subscription = this.on(event, (payload) => {
       subscription.unsubscribe();
       listener(payload);
     });

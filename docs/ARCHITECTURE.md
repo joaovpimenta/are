@@ -1,187 +1,91 @@
 # ARE Technical Architecture
 
-## Stack
+## Design vocabulary
 
-- TypeScript
-- React
-- Vite
-- StyleX
-- Three.js
-- React Three Fiber
-- Drei when it removes meaningful boilerplate
-- Zustand
-- XState
-- Vitest
-- React Testing Library
-- Playwright
+ARE uses **module**, **interface**, **depth**, **seam**, **adapter**, **leverage** and **locality** as its shared design vocabulary.
 
-## Responsibility boundaries
+- A deep module hides meaningful decisions behind a small interface.
+- The interface is the test surface.
+- A seam needs evidence: one adapter is hypothetical; two adapters make it real.
+- The deletion test detects shallow modules: removing one should concentrate complexity, not merely move it.
+- Locality keeps rules, transitions and their tests close enough to understand without file hopping.
+- Leverage measures how many Adventures or renderers benefit from one safe change.
 
-### React
+## Runtime ownership
 
-React owns application composition, DOM UI, lifecycle integration and the Lab/adventure shells.
+`AdventureSession` is the single owner of cross-mechanism progress, inventory, current Scene and completion. It is a deep module: its interface is `getSnapshot`, `subscribe`, `send`, `reset` and `destroy`; event ordering, deduplication and completion rules remain inside.
 
-### Three.js / React Three Fiber
+Puzzle mechanisms own deterministic local transitions. Renderers own presentation-only state. A renderer publishes `active`, `error` or `solved` to the Adventure session and never duplicates global facts.
 
-Three owns spatial rendering and interaction: scenes, cameras, lights, models, materials, particles and 3D objects. React Three Fiber is the preferred React integration layer.
-
-### StyleX
-
-StyleX owns DOM/UI styling, semantic design tokens, component variants and themeable presentation. Three.js materials and shaders must not depend on StyleX classes. Both renderers may consume the same semantic theme values through adapters.
-
-### Zustand
-
-Zustand owns simple shared/session state that needs to be read across otherwise unrelated parts of an adventure.
-
-Typical examples:
-
-- inventory;
-- discovered clues;
-- persistent/global flags;
-- player settings;
-- selected theme/scenario;
-- save/progress data.
-
-Zustand must not duplicate state owned by an XState machine.
-
-### XState
-
-XState owns behavior that benefits from explicit states, events, guards and transitions.
-
-Typical examples:
-
-- puzzle lifecycle;
-- keypad/dial/safe behavior;
-- dialogue flow;
-- doors and mechanisms;
-- scene/adventure progression where transitions are meaningful.
-
-### Single source of truth rule
-
-A piece of state has one owner. If XState owns `keypad = solved`, Zustand stores only the global consequence when needed, such as `vaultOpened = true`.
-
-## Engine model
-
-The engine separates logic from presentation.
-
-```text
-puzzle logic / machine
-        |
-        +-- DOM renderer (React + StyleX)
-        |
-        +-- 3D renderer (R3F + Three.js)
+```mermaid
+flowchart TD
+  Input[Pointer, touch or keyboard] --> Renderer[DOM or Three.js renderer]
+  Renderer --> Mechanism[Puzzle mechanism]
+  Mechanism --> Result[Mechanism result]
+  Result --> Session[Adventure session]
 ```
 
-A puzzle must not require a specific renderer unless its mechanics are inherently spatial.
+## Renderer seam
 
-## Monorepo namespaces
+DOM and Three.js renderers are two adapters over the same mechanism interface. This is a real seam. Spatial renderers use React Three Fiber; DOM renderers use React and StyleX. Each essential spatial interaction has a touch-friendly, keyboard-accessible DOM path where practical.
+
+The engine currently exposes refined Keypad and Dial artifacts plus Signal Tuner, Lever Console and Cipher Rotor artifacts. Metal layers, screws, bezels, status lamps, emissive feedback and semantic materials make their affordances diegetic without making animation the only status carrier.
+
+## Theme translation
+
+Theme is a typed semantic module. Three explicit adapters translate it:
+
+| Adapter | Consumer | Output |
+|---|---|---|
+| `toObjectThemeStyle` | reusable DOM renderer | `--object-*` variables |
+| `toLabThemeStyle` | Lab harness | `--are-*` variables |
+| `toThreeTheme` | Three.js renderer | material palette |
+
+This preserves locality: theme fallback and translation rules live in one module, while each renderer only consumes semantic values.
+
+## Lab harness
+
+The Lab harness owns route navigation, theme choice, reduced-motion mode, reset, event history and Adventure session telemetry. Each `/lab/<mechanism>/` module owns only its Artifact, operation, known solution, hint ladder, renderer and fallback controls.
+
+Routes are lazy. The overview interface is roughly 70 kB gzip; the spatial rendering seam is fetched only when opened. The build writes a physical `index.html` for each route so direct GitHub Pages navigation remains functional.
+
+## Adventure assembly
+
+An Adventure is a workspace package with a validated `adventure.json`. The build module:
+
+1. validates identity and route safety;
+2. invokes the declared package build;
+3. copies the real output into `dist/<id>/`;
+4. validates relative asset references;
+5. generates the root catalog from manifest metadata.
+
+`Echo Station` is the integration proof. It composes a local Scenario, local Theme, specialized Signal Archive renderer, Adventure session, Dialogue, Signal Tuner and Cipher Rotor. Its spatial scenes are lazy so narrative content renders before Three.js downloads.
+
+## Verification
+
+- Vitest tests mechanism interfaces, Adventure session invariants, theme adapters, route parsing and build validation.
+- React Testing Library tests semantic DOM behavior through the rendered interface.
+- Playwright verifies direct routes, session continuity, mobile overflow, DOM fallbacks and the complete Echo Station journey.
+- CI installs from the committed pnpm lockfile, runs lint/typecheck/tests/build, then runs Chromium regression before Pages deployment.
+
+The deterministic baseline fixes Node, pnpm and dependency versions. WebGL canvases cap device pixel ratio at 1.5 to protect mobile fill rate, while controls remain usable at 390 px and desktop widths.
+
+## Module map
 
 ```text
 engine/
-  core/
-  runtime/
-  puzzles/
-  components/
-  renderers/
-    dom/
-    three/
-  themes/
-  scenarios/
-  styles/
-
-adventures/
-  <adventure>/
-    src/
-    assets/
-    components/
-    themes/
-    scenarios/
-
+  core/          typed events and module contracts
+  mechanisms/    deterministic puzzle rules
+  session/       cross-mechanism Adventure state
+  components/    DOM and Three.js renderers
+  runtime/       sequential Scene runtime
 lab/
-site/
+  harness/       shared Lab interface
+  routes/        lazy mechanism modules
+adventures/
+  echo-station/  first complete Adventure assembly
 scripts/
+  build-lib.mjs  manifest discovery and artifact assembly
 ```
 
-## Resource resolution
-
-Resolution is namespace-aware.
-
-### Components
-
-1. adventure-local component with the same identifier;
-2. engine component.
-
-### Themes
-
-1. adventure-local selected-theme override;
-2. engine selected theme;
-3. engine default theme values.
-
-### Scenarios
-
-1. adventure-local selected-scenario override;
-2. engine selected scenario;
-3. engine default scenario resources.
-
-Theme and scenario are orthogonal. Final presentation composition is explicit rather than relying on a single ambiguous global precedence list.
-
-## Lab contract
-
-Every reusable engine component should eventually have a deterministic Lab route under `/lab/<component>/` with:
-
-- interactive demo;
-- configuration controls;
-- known states;
-- emitted events;
-- success/error/reset actions;
-- theme selection;
-- scenario selection where relevant;
-- DOM/3D renderer selection where relevant;
-- reduced-motion testing;
-- override testing;
-- accessibility notes.
-
-The Lab is both documentation and the primary regression surface.
-
-## Regression strategy
-
-### Vitest
-
-Use for engine logic, resolver behavior, Zustand stores, XState machines and pure puzzle rules.
-
-### React Testing Library
-
-Use for DOM component behavior, accessibility semantics and React integration.
-
-### Playwright
-
-Use for end-to-end flows and visual regression across the Lab and adventures.
-
-For Three.js screenshot regression, tests must control viewport, DPR, camera, random seeds, assets and animation time to avoid noisy snapshots.
-
-Do not test the full Cartesian product of renderer x theme x scenario x state. Maintain a required baseline matrix plus targeted cases for important combinations.
-
-## CI/CD model
-
-Pull requests run validation and build without production deployment.
-
-`main` runs:
-
-```text
-quality
-  lint
-  typecheck
-  unit/component tests
-      |
-      v
-build
-  assemble dist/
-  configure Pages
-  upload artifact
-      |
-      v
-deploy
-  GitHub Pages environment
-```
-
-A single Pages artifact contains the root site, Lab and all discovered adventures.
+Accepted decisions are recorded in `docs/adr/` and are not re-litigated without observed friction.

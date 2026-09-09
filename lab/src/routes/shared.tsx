@@ -1,0 +1,37 @@
+import { Canvas } from '@react-three/fiber';
+import type { ReactNode } from 'react';
+
+export function SceneLighting() {
+  return (
+    <>
+      <ambientLight intensity={0.72} />
+      <directionalLight position={[4, 6, 7]} intensity={2.2} castShadow />
+      <directionalLight position={[-5, 1, 4]} intensity={0.72} />
+      <hemisphereLight color="#bceeff" groundColor="#05070b" intensity={0.34} />
+    </>
+  );
+}
+
+export function HardwareCanvas({
+  children,
+  cameraZ = 7.5,
+  ariaLabel,
+}: {
+  children: ReactNode;
+  cameraZ?: number;
+  ariaLabel: string;
+}) {
+  return (
+    <Canvas
+      aria-label={ariaLabel}
+      shadows
+      camera={{ position: [0, 0.12, cameraZ], fov: 38 }}
+      dpr={[1, 1.5]}
+      gl={{ antialias: true, powerPreference: 'high-performance' }}
+    >
+      <SceneLighting />
+      {children}
+    </Canvas>
+  );
+}
+

@@ -7,7 +7,7 @@ export default defineConfig({
       'engine/**/*.test.tsx',
       'lab/**/*.test.ts',
       'lab/**/*.test.tsx',
+      'scripts/**/*.test.ts',
     ],
-    passWithNoTests: true,
   },
 });

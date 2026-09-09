@@ -1,6 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
-import type { CSSProperties } from 'react';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle } from '../../theme';
 
 export type FeedbackStatus = 'idle' | 'success' | 'error';
 
@@ -80,15 +80,7 @@ const styles = stylex.create({
 });
 
 export function FeedbackPanel({ status, title, message, theme, onReset }: FeedbackPanelProps) {
-  const variables = {
-    '--object-accent': theme.accent,
-    '--object-surface': theme.surface,
-    '--object-surface-raised': theme.surfaceRaised,
-    '--object-text': theme.text,
-    '--object-muted': theme.muted,
-    '--object-success': theme.success,
-    '--object-danger': theme.danger,
-  } as CSSProperties;
+  const variables = toObjectThemeStyle(theme);
   const label = status === 'success' ? 'sucesso' : status === 'error' ? 'erro' : 'aguardando';
   const fallbackTitle = status === 'success' ? 'Mecanismo desbloqueado' : status === 'error' ? 'Sinal rejeitado' : 'Aguardando ação';
   const fallbackMessage = status === 'success' ? 'A resposta foi confirmada pelo sistema.' : status === 'error' ? 'A configuração ainda não corresponde ao padrão.' : 'Interaja com um objeto para receber feedback.';

@@ -1,51 +1,41 @@
 # ARE — Adventure Rooms Engine
 
-ARE is a monorepo for building interactive puzzle/adventure experiences for the web.
+ARE is a TypeScript monorepo for diegetic puzzle Adventures on the web. It now includes a reusable engine, an interactive Lab and the playable **Echo Station** Adventure.
 
-The project starts as an engine laboratory and is designed to evolve into a reusable adventure engine and, later, a player-facing platform.
+## What is implemented
 
-## Stack
-
-- TypeScript
-- React + Vite
-- StyleX
-- Three.js + React Three Fiber
-- Drei where useful
-- Zustand for simple shared/session state
-- XState for explicit behavioral state machines
-- Vitest + React Testing Library
-- Playwright for E2E and visual regression
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for responsibility boundaries and [`PLAN.md`](PLAN.md) for the broader roadmap.
+- `AdventureSession` as the single owner of progress, inventory, Scene and completion;
+- deterministic Dial, Sequence, Switch, Cipher and Dialogue mechanisms with tests;
+- DOM and Three.js renderer seams backed by semantic Theme adapters;
+- refined Keypad and Dial artifacts plus new Signal Tuner, Lever Console and Cipher Rotor artifacts;
+- touch, pointer, keyboard and reduced-motion paths for mobile and desktop;
+- one lazy Lab route per mechanism, direct-link output for GitHub Pages and persistent session telemetry;
+- manifest-driven Adventure discovery and real output assembly;
+- pinned pnpm toolchain, lockfile, lint, typecheck, Vitest, React Testing Library and Playwright regression.
 
 ## Workspace
 
 ```text
-engine/       reusable engine, puzzles, runtime and renderers
-adventures/   adventure modules discovered by the build
-lab/          interactive component/regression laboratory
-site/         root catalog shell
-scripts/      monorepo build/validation tooling
+engine/                  deep reusable modules and renderers
+lab/                     interactive test harness
+adventures/echo-station/ first playable Adventure
+scripts/                 deterministic build assembly
+docs/adr/                accepted architecture decisions
 ```
+
+Read [CONTEXT.md](CONTEXT.md) for domain language and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module, interface, depth, seam, adapter, leverage and locality model.
 
 ## Commands
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
+pnpm dev
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm test:e2e
+pnpm quality
 ```
 
-The initial build assembles a GitHub Pages-ready `dist/` containing `/`, `/lab/`, and one route for every directory found under `adventures/`.
-
-## CI/CD
-
-`.github/workflows/ci-pages.yml` separates the pipeline into:
-
-1. **Quality** — lint, typecheck and unit/component tests.
-2. **Build** — assemble the single Pages artifact.
-3. **Deploy** — deploy `dist/` to the `github-pages` environment on non-PR runs.
-
-Pull requests validate/build without deploying production Pages.
+`pnpm build` creates a GitHub Pages-ready `dist/` with the catalog, direct Lab routes and every validated Adventure manifest. Pull requests run validation and Chromium regression; `main` additionally deploys the assembled artifact.

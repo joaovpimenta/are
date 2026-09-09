@@ -1,7 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
-import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { advanceDialogue, createDialogueState } from '../../mechanisms/dialogue';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle } from '../../theme';
 
 export type DialogueLine = {
   id: string;
@@ -97,47 +98,34 @@ const styles = stylex.create({
 });
 
 export function DialoguePanel({ lines, choices = [], theme, resetKey = 0, onChoose, onComplete }: DialoguePanelProps) {
-  const [lineIndex, setLineIndex] = useState(0);
-  const [completed, setCompleted] = useState(false);
-  const variables = {
-    '--object-accent': theme.accent,
-    '--object-surface': theme.surface,
-    '--object-surface-raised': theme.surfaceRaised,
-    '--object-text': theme.text,
-    '--object-muted': theme.muted,
-    '--object-success': theme.success,
-  } as CSSProperties;
+  const [state, setState] = useState(createDialogueState);
+  const variables = toObjectThemeStyle(theme);
 
   useEffect(() => {
-    setLineIndex(0);
-    setCompleted(false);
+    setState(createDialogueState());
   }, [resetKey, lines]);
 
   if (lines.length === 0) {
     return null;
   }
 
-  const current = lines[Math.min(lineIndex, lines.length - 1)];
-  const atEnd = lineIndex >= lines.length - 1;
+  const current = lines[Math.min(state.lineIndex, lines.length - 1)];
+  const atEnd = state.lineIndex >= lines.length - 1;
 
   const advance = () => {
-    if (!atEnd) {
-      setLineIndex((value) => value + 1);
-      return;
-    }
-
-    setCompleted(true);
-    onComplete?.();
+    const next = advanceDialogue(state, lines.length);
+    setState(next);
+    if (!state.completed && next.completed) onComplete?.();
   };
 
   return (
     <section {...stylex.props(styles.panel)} style={variables} aria-label="Diálogo">
       <div {...stylex.props(styles.meta)}>
         <span {...stylex.props(styles.speaker)}>{current.speaker}</span>
-        <span {...stylex.props(styles.progress)}>{lineIndex + 1}/{lines.length}</span>
+        <span {...stylex.props(styles.progress)}>{state.lineIndex + 1}/{lines.length}</span>
       </div>
       <p {...stylex.props(styles.text)}>{current.text}</p>
-      {completed ? (
+      {state.completed ? (
         <strong {...stylex.props(styles.complete)}>Conversa concluída.</strong>
       ) : (
         <div {...stylex.props(styles.controls)}>

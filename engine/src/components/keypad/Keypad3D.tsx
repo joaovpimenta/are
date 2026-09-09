@@ -1,9 +1,11 @@
-import { Html } from '@react-three/drei';
+import { Html, RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
 import type { Mesh } from 'three';
 import type { AreTheme } from '../../theme';
+import { toObjectThemeStyle, toThreeTheme } from '../../theme';
+import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   keyLabel: {
@@ -12,28 +14,28 @@ const styles = stylex.create({
     display: 'grid',
     placeItems: 'center',
     borderRadius: 9,
-    color: '#f7fbff',
+    color: 'var(--object-text)',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     fontWeight: 800,
     fontSize: 14,
     lineHeight: 1,
     userSelect: 'none',
     pointerEvents: 'none',
-    textShadow: '0 0 12px rgba(120, 230, 255, .7)',
+    textShadow: '0 0 12px var(--object-accent)',
   },
   display: {
     minWidth: 118,
     padding: '7px 12px',
     borderRadius: 7,
     textAlign: 'center',
-    color: '#dff9ff',
-    backgroundColor: 'rgba(4, 11, 18, .88)',
-    border: '1px solid rgba(120, 225, 255, .2)',
+    color: 'var(--object-text)',
+    backgroundColor: 'color-mix(in srgb, var(--object-surface) 90%, black)',
+    border: '1px solid color-mix(in srgb, var(--object-accent) 24%, transparent)',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     fontWeight: 700,
     fontSize: 12,
     letterSpacing: 4,
-    boxShadow: '0 0 24px rgba(60, 200, 255, .12)',
+    boxShadow: '0 0 24px color-mix(in srgb, var(--object-accent) 14%, transparent)',
     userSelect: 'none',
     pointerEvents: 'none',
   },
@@ -44,10 +46,11 @@ type KeyButtonProps = {
   position: [number, number, number];
   theme: AreTheme;
   disabled?: boolean;
+  reducedMotion?: boolean;
   onPress: (label: string) => void;
 };
 
-function KeyButton({ label, position, theme, disabled, onPress }: KeyButtonProps) {
+function KeyButton({ label, position, theme, disabled, reducedMotion = false, onPress }: KeyButtonProps) {
   const mesh = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
@@ -55,7 +58,9 @@ function KeyButton({ label, position, theme, disabled, onPress }: KeyButtonProps
   useFrame((_, delta) => {
     if (!mesh.current) return;
     const targetZ = pressed ? -0.08 : hovered ? 0.08 : 0;
-    mesh.current.position.z += (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
+    mesh.current.position.z = reducedMotion
+      ? targetZ
+      : mesh.current.position.z + (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
   });
 
   return (
@@ -93,7 +98,7 @@ function KeyButton({ label, position, theme, disabled, onPress }: KeyButtonProps
         />
       </mesh>
       <Html transform center position={[0, 0, 0.16]} distanceFactor={5.8}>
-        <span {...stylex.props(styles.keyLabel)}>{label}</span>
+        <span {...stylex.props(styles.keyLabel)} style={toObjectThemeStyle(theme)}>{label}</span>
       </Html>
     </group>
   );
@@ -106,6 +111,7 @@ type Keypad3DProps = {
   onDigit: (digit: string) => void;
   onClear: () => void;
   onSubmit: () => void;
+  reducedMotion?: boolean;
 };
 
 const keys = [
@@ -115,12 +121,13 @@ const keys = [
   ['C', '0', 'OK'],
 ];
 
-export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit }: Keypad3DProps) {
+export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, reducedMotion = false }: Keypad3DProps) {
   const root = useRef<Mesh>(null);
+  const palette = toThreeTheme(theme);
 
   useFrame(({ clock }) => {
     if (!root.current) return;
-    const shake = status === 'error' ? Math.sin(clock.elapsedTime * 55) * 0.045 : 0;
+    const shake = status === 'error' && !reducedMotion ? Math.sin(clock.elapsedTime * 55) * 0.045 : 0;
     root.current.rotation.z = shake;
   });
 
@@ -128,17 +135,21 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit }: K
 
   return (
     <group rotation={[-0.08, 0.08, 0]}>
-      <mesh ref={root} castShadow receiveShadow position={[0, 0, -0.2]}>
-        <boxGeometry args={[3.45, 4.25, 0.38]} />
-        <meshStandardMaterial color={theme.surface} metalness={0.72} roughness={0.24} />
-      </mesh>
+      <RoundedBox ref={root} args={[3.7, 4.55, 0.42]} radius={0.2} smoothness={5} position={[0, 0, -0.24]} castShadow receiveShadow>
+        <meshStandardMaterial color={palette.housing} metalness={0.78} roughness={0.24} />
+      </RoundedBox>
+      <PanelScrew position={[-1.53, 1.95, 0.02]} palette={palette} scale={0.8} />
+      <PanelScrew position={[1.53, 1.95, 0.02]} palette={palette} scale={0.8} />
+      <PanelScrew position={[-1.53, -1.95, 0.02]} palette={palette} scale={0.8} />
+      <PanelScrew position={[1.53, -1.95, 0.02]} palette={palette} scale={0.8} />
+      <StatusLamp position={[1.35, 1.5, 0.06]} color={accent} active={status !== 'idle'} scale={0.72} />
 
       <mesh position={[0, 1.5, 0.05]}>
         <boxGeometry args={[2.65, 0.58, 0.16]} />
-        <meshStandardMaterial color="#050b12" emissive={accent} emissiveIntensity={status === 'idle' ? 0.08 : 0.25} />
+        <meshStandardMaterial color={palette.face} emissive={accent} emissiveIntensity={status === 'idle' ? 0.08 : 0.25} />
       </mesh>
       <Html transform center position={[0, 1.5, 0.15]} distanceFactor={5.6}>
-        <div {...stylex.props(styles.display)}>{value.padEnd(4, '·')}</div>
+        <div {...stylex.props(styles.display)} style={toObjectThemeStyle(theme)}>{value.padEnd(4, '·')}</div>
       </Html>
 
       {keys.flatMap((row, rowIndex) =>
@@ -153,6 +164,7 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit }: K
               position={[x, y, 0.07]}
               theme={theme}
               disabled={status === 'solved'}
+              reducedMotion={reducedMotion}
               onPress={handler}
             />
           );

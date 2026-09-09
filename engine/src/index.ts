@@ -3,22 +3,44 @@ export { createKeypadMachine } from './components/keypad/keypadMachine';
 export { Dial3D } from './components/dial/Dial3D';
 export { TypedEventEmitter } from './core/events';
 export type { EventListener, EventMap, EventSubscription } from './core/events';
-export type {
-  CommonComponentEvents,
-  ComponentContext,
-  ComponentInstance,
-  ComponentStatus,
-  MountableComponent,
-} from './core/component';
+export type { ModuleListener, ReadableModule, StatefulModule } from './core/module';
 export { prefersReducedMotion } from './core/reducedMotion';
 export type { MatchMedia } from './core/reducedMotion';
 export { createRuntimeContext } from './runtime/context';
 export type { AdventureRuntimeState, RuntimeContext, RuntimeContextInput } from './runtime/context';
 export { createSequentialRuntime, SequentialRuntime } from './runtime/sequentialRuntime';
 export type { RuntimeScene, SequentialRuntimeEvents, SequentialRuntimeOptions } from './runtime/sequentialRuntime';
-export { useGameStore } from './store/gameStore';
-export { amberTheme, defaultTheme } from './theme';
-export type { AreTheme } from './theme';
+export { createAdventureSession, AdventureSession } from './session/adventureSession';
+export type {
+  AdventureSessionDefinition,
+  AdventureSessionEvent,
+  AdventureSessionEvents,
+  AdventureSessionSnapshot,
+  MechanismResult,
+} from './session/adventureSession';
+export { useModuleSnapshot } from './session/react';
+export {
+  dialRotation,
+  dialValueFromClockPoint,
+  normalizeDialValue,
+  stepDialValue,
+} from './mechanisms/dial';
+export type { DialRange } from './mechanisms/dial';
+export { createCipherState, stepCipherRotor } from './mechanisms/cipher';
+export type { CipherState } from './mechanisms/cipher';
+export { advanceDialogue, createDialogueState } from './mechanisms/dialogue';
+export type { DialogueState } from './mechanisms/dialogue';
+export { createSequenceState, transitionSequence } from './mechanisms/sequence';
+export type { SequenceEvent, SequenceState, SequenceStatus } from './mechanisms/sequence';
+export { createSwitchValues, matchesSwitchSolution, toggleSwitch } from './mechanisms/switches';
+export {
+  amberTheme,
+  defaultTheme,
+  toLabThemeStyle,
+  toObjectThemeStyle,
+  toThreeTheme,
+} from './theme';
+export type { AreTheme, ThreeTheme } from './theme';
 export { InventoryPanel } from './components/inventory/InventoryPanel';
 export type { InventoryItem } from './components/inventory/InventoryPanel';
 export { DialoguePanel } from './components/dialogue/DialoguePanel';
@@ -28,3 +50,6 @@ export { SwitchGroup } from './components/switches/SwitchGroup';
 export { RevealClue } from './components/reveal/RevealClue';
 export { FeedbackPanel } from './components/feedback/FeedbackPanel';
 export type { FeedbackStatus } from './components/feedback/FeedbackPanel';
+export { Tuner3D } from './components/tuner/Tuner3D';
+export { LeverConsole3D } from './components/levers/LeverConsole3D';
+export { CipherRotor3D } from './components/cipher/CipherRotor3D';
