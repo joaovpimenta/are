@@ -20,17 +20,37 @@ test('Lab has no horizontal overflow and a vertical gesture can start over canva
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before);
 });
 
-test('Locks page remains one vertical scroll and lazy Three canvases can mount/unmount repeatedly', async ({ page }) => {
+test('mobile mechanism navigation wraps without becoming a horizontal scroll container', async ({ page }) => {
+  await page.goto('/lab/');
+  const navigation = page.getByRole('navigation', { name: 'Mecanismos do Lab' });
+  const metrics = await navigation.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    overflowX: getComputedStyle(element).overflowX,
+  }));
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
+  expect(metrics.overflowX).not.toBe('auto');
+  expect(metrics.overflowX).not.toBe('scroll');
+});
+
+test('Locks page remains one vertical scroll and distant Three canvases actually unmount/remount', async ({ page }) => {
   await page.goto('/lab/locks/');
-  await expect(page.locator('section[id^="lock-"]')).toHaveCount(14);
+  const sections = page.locator('section[id^="lock-"]');
+  await expect(sections).toHaveCount(14);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 
-  const first = page.locator('section[id^="lock-"]').first();
-  const last = page.locator('section[id^="lock-"]').last();
+  const first = sections.first();
+  const last = sections.last();
+  await first.scrollIntoViewIfNeeded();
+  await expect(first.locator('canvas')).toHaveCount(1);
+
   for (let cycle = 0; cycle < 2; cycle += 1) {
     await last.scrollIntoViewIfNeeded();
-    await expect(last).toBeVisible();
+    await expect(last.locator('canvas')).toHaveCount(1);
+    await expect(first.locator('canvas')).toHaveCount(0);
+
     await first.scrollIntoViewIfNeeded();
-    await expect(first).toBeVisible();
+    await expect(first.locator('canvas')).toHaveCount(1);
+    await expect(last.locator('canvas')).toHaveCount(0);
   }
 });
