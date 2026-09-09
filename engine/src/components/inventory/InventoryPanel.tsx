@@ -39,7 +39,7 @@ const styles = stylex.create({
   },
   count: {
     color: 'var(--object-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono)',
     fontSize: 11,
     fontWeight: 800,
   },

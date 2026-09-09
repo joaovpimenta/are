@@ -1,7 +1,7 @@
 import { prefersReducedMotion } from '@are/engine/core/reducedMotion';
 import { createAdventureSession } from '@are/engine/session/adventureSession';
 import { useModuleSnapshot } from '@are/engine/session/react';
-import { amberTheme, defaultTheme, toLabThemeStyle } from '@are/engine/theme';
+import { builtInThemes, toLabThemeStyle, type AreThemeName } from '@are/engine/theme';
 import { useEffect, useMemo, useState } from 'react';
 import { LabHarness } from './harness/LabHarness';
 import { Overview } from './harness/Overview';
@@ -20,11 +20,11 @@ export function App() {
   }), []);
   const snapshot = useModuleSnapshot(session);
   const [route, setRoute] = useState<LabRouteId>(() => parseLabRoute(window.location.pathname));
-  const [themeName, setThemeName] = useState<'cyan' | 'amber'>('cyan');
+  const [themeName, setThemeName] = useState<AreThemeName>('cyan');
   const [reducedMotion, setReducedMotion] = useState(() => prefersReducedMotion());
   const [resetVersion, setResetVersion] = useState(0);
   const [eventLog, setEventLog] = useState<string[]>([]);
-  const theme = themeName === 'cyan' ? defaultTheme : amberTheme;
+  const theme = builtInThemes[themeName];
 
   useEffect(() => {
     const subscription = session.events.on('change', ({ event, snapshot: next }) => {
@@ -82,7 +82,7 @@ export function App() {
         themeName={themeName}
         reducedMotion={reducedMotion}
         onNavigate={navigate}
-        onToggleTheme={() => setThemeName((value) => value === 'cyan' ? 'amber' : 'cyan')}
+        onThemeChange={setThemeName}
         onToggleReducedMotion={() => setReducedMotion((value) => !value)}
         onReset={reset}
       >

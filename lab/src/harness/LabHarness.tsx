@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import type { MouseEvent, ReactNode } from 'react';
 import type { AdventureSessionSnapshot } from '@are/engine/session/adventureSession';
+import type { AreThemeName } from '@are/engine/theme';
 import { LAB_ENTRIES, type LabRouteId, labRouteHref } from '../model';
 import { labStyles } from '../styles';
 
@@ -8,11 +9,11 @@ type LabHarnessProps = {
   currentRoute: LabRouteId;
   snapshot: AdventureSessionSnapshot;
   eventLog: readonly string[];
-  themeName: 'cyan' | 'amber';
+  themeName: AreThemeName;
   reducedMotion: boolean;
   children: ReactNode;
   onNavigate: (route: LabRouteId, href: string) => void;
-  onToggleTheme: () => void;
+  onThemeChange: (theme: AreThemeName) => void;
   onToggleReducedMotion: () => void;
   onReset: () => void;
 };
@@ -25,7 +26,7 @@ export function LabHarness({
   reducedMotion,
   children,
   onNavigate,
-  onToggleTheme,
+  onThemeChange,
   onToggleReducedMotion,
   onReset,
 }: LabHarnessProps) {
@@ -46,9 +47,16 @@ export function LabHarness({
           <span {...stylex.props(labStyles.brandText)}><strong>ARE LAB</strong><small {...stylex.props(labStyles.brandTextMeta)}>Field hardware registry</small></span>
         </a>
         <div {...stylex.props(labStyles.toolbar)}>
-          <button {...stylex.props(labStyles.toolButton)} type="button" onClick={onToggleTheme}>
-            Tema {themeName === 'cyan' ? 'Cyan' : 'Amber'}
-          </button>
+          <select
+            {...stylex.props(labStyles.toolButton, labStyles.themeSelect)}
+            aria-label="Tema do Lab"
+            value={themeName}
+            onChange={(event) => onThemeChange(event.currentTarget.value as AreThemeName)}
+          >
+            <option value="cyan">Tema Cyan</option>
+            <option value="amber">Tema Amber</option>
+            <option value="stranger-things">Tema Stranger Things</option>
+          </select>
           <button {...stylex.props(labStyles.toolButton)} type="button" aria-pressed={reducedMotion} onClick={onToggleReducedMotion}>
             Movimento {reducedMotion ? 'reduzido' : 'normal'}
           </button>

@@ -7,6 +7,7 @@ ARE is a TypeScript monorepo for diegetic puzzle Adventures on the web. It now i
 - `AdventureSession` as the single owner of progress, inventory, Scene and completion;
 - deterministic Dial, Sequence, Switch, Cipher and Dialogue mechanisms with tests;
 - DOM and Three.js renderer seams backed by semantic Theme adapters;
+- built-in Cyan, Amber and Stranger Things themes with shared color, material, typography and atmosphere tokens;
 - refined Keypad and Dial artifacts plus new Signal Tuner, Lever Console and Cipher Rotor artifacts;
 - touch, pointer, keyboard and reduced-motion paths for mobile and desktop;
 - one lazy Lab route per mechanism, direct-link output for GitHub Pages and persistent session telemetry;

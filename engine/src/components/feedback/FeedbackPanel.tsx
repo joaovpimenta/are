@@ -35,7 +35,7 @@ const styles = stylex.create({
   eyebrow: {
     margin: 0,
     color: 'var(--object-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono)',
     fontSize: 10,
     fontWeight: 900,
     letterSpacing: 1.2,

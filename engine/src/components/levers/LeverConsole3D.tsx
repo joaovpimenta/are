@@ -14,7 +14,7 @@ const styles = stylex.create({
   label: {
     minWidth: 52,
     color: 'var(--object-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono)',
     fontSize: 9,
     fontWeight: 900,
     letterSpacing: 1.4,

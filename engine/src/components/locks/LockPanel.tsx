@@ -46,7 +46,7 @@ const styles = stylex.create({
     backgroundColor: 'var(--object-surface-raised)', color: 'var(--object-text)', fontSize: 16, fontWeight: 800,
     ':focus-visible': focusRing,
   },
-  inputCode: { textAlign: 'center', letterSpacing: 8, fontFamily: 'ui-monospace, monospace', fontSize: 22 },
+  inputCode: { textAlign: 'center', letterSpacing: 8, fontFamily: 'var(--object-font-mono)', fontSize: 22 },
   grid: { display: 'grid', gap: 8 },
   grid3: { gridTemplateColumns: 'repeat(3, minmax(52px, 1fr))' },
   grid4: { gridTemplateColumns: 'repeat(4, minmax(44px, 1fr))' },
@@ -95,7 +95,7 @@ const styles = stylex.create({
     borderRadius: '50%', borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--object-accent)',
     transform: 'translate(-50%, -50%)', boxShadow: '0 0 20px var(--object-accent)', pointerEvents: 'none',
   },
-  coordinates: { margin: 0, color: 'var(--object-muted)', fontFamily: 'ui-monospace, monospace', fontSize: 12 },
+  coordinates: { margin: 0, color: 'var(--object-muted)', fontFamily: 'var(--object-font-mono)', fontSize: 12 },
   controls: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   submit: {
     minHeight: 44, paddingInline: 16, borderRadius: 999, borderWidth: 0,

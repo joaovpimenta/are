@@ -10,11 +10,22 @@ import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   readout: {
-    display: 'grid', placeItems: 'center', width: 48, height: 56, borderWidth: 1, borderStyle: 'solid',
-    borderColor: 'color-mix(in srgb, var(--object-accent) 28%, transparent)', borderRadius: 8,
-    color: 'var(--object-accent)', backgroundColor: 'color-mix(in srgb, var(--object-surface) 90%, black)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 24, fontWeight: 950,
-    pointerEvents: 'none', userSelect: 'none', textShadow: '0 0 16px var(--object-accent)',
+    display: 'grid',
+    placeItems: 'center',
+    width: 48,
+    height: 56,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: 'color-mix(in srgb, var(--object-accent) 28%, transparent)',
+    borderRadius: 8,
+    color: 'var(--object-accent)',
+    backgroundColor: 'color-mix(in srgb, var(--object-surface) 90%, black)',
+    fontFamily: 'var(--object-font-mono)',
+    fontSize: 24,
+    fontWeight: 950,
+    pointerEvents: 'none',
+    userSelect: 'none',
+    textShadow: '0 0 16px var(--object-accent)',
   },
 });
 

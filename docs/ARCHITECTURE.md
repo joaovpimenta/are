@@ -43,6 +43,8 @@ Theme is a typed semantic module. Three explicit adapters translate it:
 
 This preserves locality: theme fallback and translation rules live in one module, while each renderer only consumes semantic values.
 
+The built-in registry exposes Cyan, Amber and Stranger Things presets. Color and material tokens reach both renderer adapters, while optional typography and atmosphere tokens deepen DOM presentation without forcing existing Adventure themes to redefine the extended contract.
+
 ## Lab harness
 
 The Lab harness owns route navigation, theme choice, reduced-motion mode, reset, event history and Adventure session telemetry. Each `/lab/<mechanism>/` module owns only its Artifact, operation, known solution, hint ladder, renderer and fallback controls.

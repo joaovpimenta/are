@@ -44,7 +44,7 @@ const styles = stylex.create({
   },
   speaker: {
     color: 'var(--object-accent)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono)',
     fontSize: 11,
     fontWeight: 900,
     letterSpacing: 1.4,
@@ -52,7 +52,7 @@ const styles = stylex.create({
   },
   progress: {
     color: 'var(--object-muted)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono)',
     fontSize: 11,
   },
   text: {
