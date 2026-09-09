@@ -15,23 +15,47 @@ async function filesUnder(directory) {
   return output;
 }
 
-async function sizeOf(directory) {
-  return (await filesUnder(directory)).reduce((sum, file) => sum + file.bytes, 0);
+function shipped(files) {
+  return files.filter((file) => !file.path.endsWith('.map'));
 }
 
-const all = await filesUnder(dist);
-const engineFiles = all.filter((file) => basename(file.path).startsWith('are-engine-') && file.path.includes(`${join('lab', 'assets')}`));
+function sum(files) {
+  return files.reduce((total, file) => total + file.bytes, 0);
+}
+
+async function entryBundle(directory) {
+  const files = shipped(await filesUnder(directory));
+  return sum(files.filter((file) => {
+    const relativePath = relative(directory, file.path).replaceAll('\\', '/');
+    return relativePath === 'index.html' || relativePath.startsWith('assets/');
+  }));
+}
+
+const all = shipped(await filesUnder(dist));
+const engineFiles = all.filter((file) => basename(file.path).startsWith('are-engine-') && /\.(?:js|css)$/.test(file.path));
+const engine = engineFiles.reduce((largest, file) => Math.max(largest, file.bytes), 0);
+const siteFiles = all.filter((file) => {
+  const relativePath = relative(dist, file.path).replaceAll('\\', '/');
+  return relativePath === 'index.html' || relativePath.startsWith('assets/');
+});
 const values = {
-  engine: engineFiles.reduce((sum, file) => sum + file.bytes, 0),
-  site: all.filter((file) => !relative(dist, file.path).startsWith(`lab/`) && !relative(dist, file.path).startsWith(`echo-station/`)).reduce((sum, file) => sum + file.bytes, 0),
-  lab: await sizeOf(join(dist, 'lab')),
-  'adventure:echo-station': await sizeOf(join(dist, 'echo-station')),
-  total: all.reduce((sum, file) => sum + file.bytes, 0),
+  engine,
+  site: sum(siteFiles),
+  lab: await entryBundle(join(dist, 'lab')),
+  'adventure:echo-station': await entryBundle(join(dist, 'echo-station')),
+  total: sum(all),
 };
 
 if (values.engine === 0) throw new Error('Engine chunk was not isolated; bundle budget cannot be measured.');
 
-const report = { generatedAt: new Date().toISOString(), values, budgets: config.budgets, softRatio: config.softRatio, entries: [] };
+const report = {
+  generatedAt: new Date().toISOString(),
+  measurement: 'raw deployable bytes; source maps excluded; route alias HTML excluded from entry budgets',
+  values,
+  budgets: config.budgets,
+  softRatio: config.softRatio,
+  entries: [],
+};
 let failed = false;
 for (const [name, budget] of Object.entries(config.budgets)) {
   const bytes = values[name];

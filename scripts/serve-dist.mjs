@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { URL } from 'node:url';
 
 const root = resolve(process.cwd(), 'dist');
 const port = Number(process.env.PORT ?? 4173);

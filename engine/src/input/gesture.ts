@@ -47,7 +47,7 @@ export function moveGesture(
 ): GestureState {
   if (state.pointerId !== sample.pointerId || state.phase === 'ended' || state.phase === 'cancelled') return state;
   const distancePx = distanceFromOrigin(state, sample);
-  let phase = state.phase;
+  let phase: GesturePhase = state.phase;
   if (state.kind === 'press' && distancePx > thresholdPx) phase = 'cancelled';
   else if (state.kind !== 'press' && distancePx >= thresholdPx) phase = 'active';
   return { ...state, clientX: sample.clientX, clientY: sample.clientY, distancePx, phase };

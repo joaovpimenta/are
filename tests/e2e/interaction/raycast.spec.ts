@@ -1,7 +1,8 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
 import { latestInteractionDebug } from '../helpers';
 
-async function tapCanvas(page: import('@playwright/test').Page, xRatio: number, yRatio: number) {
+async function tapCanvas(page: Page, xRatio: number, yRatio: number) {
   const canvas = page.getByLabel('Seletor de cofre 3D');
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
