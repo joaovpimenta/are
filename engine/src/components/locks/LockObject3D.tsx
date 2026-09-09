@@ -95,6 +95,20 @@ const styles = stylex.create({
 });
 
 const ReducedMotionContext = createContext(false);
+let cachedWebGlSupport: boolean | undefined;
+
+function supportsWebGl() {
+  if (cachedWebGlSupport !== undefined) return cachedWebGlSupport;
+  try {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    cachedWebGlSupport = context !== null;
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
+  } catch {
+    cachedWebGlSupport = false;
+  }
+  return cachedWebGlSupport;
+}
 
 function statusColor(status: LockVisualStatus, palette: ThreeTheme) {
   if (status === 'solved') return palette.success;
@@ -600,6 +614,7 @@ function LockScene(props: LockObject3DProps) {
 export function LockObject3D(props: LockObject3DProps) {
   const host = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [webGlAvailable, setWebGlAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
     const element = host.current;
@@ -609,9 +624,13 @@ export function LockObject3D(props: LockObject3DProps) {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (visible && webGlAvailable === null) setWebGlAvailable(supportsWebGl());
+  }, [visible, webGlAvailable]);
+
   return (
     <div ref={host} {...stylex.props(styles.canvasShell)} style={toObjectThemeStyle(props.theme)} data-three-lock={props.definition.kind}>
-      {visible ? (
+      {visible && webGlAvailable ? (
         <Canvas
           {...stylex.props(styles.canvas)}
           aria-label={`${props.definition.kind}: objeto Three.js interativo`}
@@ -626,7 +645,13 @@ export function LockObject3D(props: LockObject3DProps) {
           <SceneLighting accent={props.theme.accent} />
           <LockScene {...props} />
         </Canvas>
-      ) : <div {...stylex.props(styles.loading)}>Objeto Three.js disponível ao aproximar esta seção da viewport.</div>}
+      ) : (
+        <div {...stylex.props(styles.loading)}>
+          {webGlAvailable === false
+            ? 'WebGL indisponível. Use os controles alternativos acessíveis abaixo.'
+            : 'Objeto Three.js disponível ao aproximar esta seção da viewport.'}
+        </div>
+      )}
     </div>
   );
 }
