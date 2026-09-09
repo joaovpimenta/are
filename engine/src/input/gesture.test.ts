@@ -6,6 +6,7 @@ import {
   cancelGesture,
   isTapGesture,
   moveGesture,
+  moveGestureRespectingPageScroll,
   shouldCaptureAfterMove,
 } from './gesture';
 
@@ -37,6 +38,21 @@ describe('gesture primitive', () => {
     const start = beginGesture('rotate', sample(40, 40));
     expect(allowsVerticalPageScroll(start, sample(43, 64))).toBe(true);
     expect(allowsVerticalPageScroll(start, sample(64, 43))).toBe(false);
+  });
+
+  it('cancels a rotate candidate once touch motion belongs to page scroll', () => {
+    const start = beginGesture('rotate', sample(40, 40));
+    const moved = moveGestureRespectingPageScroll(start, sample(43, 64));
+    expect(moved.phase).toBe('cancelled');
+    expect(moved.distancePx).toBeGreaterThan(DEFAULT_DRAG_THRESHOLD_PX);
+    expect(isTapGesture(moved)).toBe(false);
+  });
+
+  it('keeps horizontal rotate motion eligible for capture', () => {
+    const start = beginGesture('rotate', sample(40, 40));
+    const moved = moveGestureRespectingPageScroll(start, sample(64, 43));
+    expect(moved.phase).toBe('active');
+    expect(shouldCaptureAfterMove(start, moved)).toBe(true);
   });
 
   it('cancels deterministically', () => {
