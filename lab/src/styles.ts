@@ -17,7 +17,10 @@ export const labStyles = stylex.create({
     fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   topbar: {
-    position: 'sticky',
+    position: {
+      default: 'sticky',
+      '@media (max-height: 500px)': 'static',
+    },
     top: 0,
     zIndex: 20,
     display: 'flex',
