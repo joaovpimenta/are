@@ -3,12 +3,19 @@ import { expect, type Locator, type Page } from '@playwright/test';
 export type TargetPoint = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
 export async function boxPoint(locator: Locator, point: TargetPoint, inset = 3) {
-  await locator.scrollIntoViewIfNeeded();
-  await locator.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
   await expect(locator).toBeVisible();
-  const box = await locator.boundingBox();
-  expect(box).not.toBeNull();
-  const resolved = box!;
+  const resolved = await locator.evaluate((element) => {
+    const initial = element.getBoundingClientRect();
+    const fullyVisible = initial.top >= 0
+      && initial.left >= 0
+      && initial.bottom <= window.innerHeight
+      && initial.right <= window.innerWidth;
+    if (!fullyVisible) element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    const rect = element.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  expect(resolved.width).toBeGreaterThan(0);
+  expect(resolved.height).toBeGreaterThan(0);
   const centerX = resolved.x + resolved.width / 2;
   const centerY = resolved.y + resolved.height / 2;
   if (point === 'top') return { x: centerX, y: resolved.y + inset };
