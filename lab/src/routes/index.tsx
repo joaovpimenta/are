@@ -35,6 +35,7 @@ const routes: Record<LabMechanismId, ComponentType<LabRouteProps>> = {
   tuner: routeModule(() => import('./TunerRoute'), 'TunerRoute'),
   levers: routeModule(() => import('./LeversRoute'), 'LeversRoute'),
   cipher: routeModule(() => import('./CipherRoute'), 'CipherRoute'),
+  locks: routeModule(() => import('./LocksRoute'), 'LocksRoute'),
 };
 
 export function renderLabRoute(id: LabMechanismId, props: LabRouteProps): ReactNode {
