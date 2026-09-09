@@ -615,6 +615,7 @@ export function LockObject3D(props: LockObject3DProps) {
         <Canvas
           {...stylex.props(styles.canvas)}
           aria-label={`${props.definition.kind}: objeto Three.js interativo`}
+          fallback={<div {...stylex.props(styles.loading)}>WebGL indisponível. Use os controles alternativos acessíveis abaixo.</div>}
           shadows
           frameloop="always"
           camera={{ position: [0, 0.12, props.definition.kind === 'musical' ? 8.6 : 7.7], fov: 38 }}
