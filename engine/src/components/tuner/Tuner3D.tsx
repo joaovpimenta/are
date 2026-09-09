@@ -5,10 +5,9 @@ import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
 import type { Group, Vector3 } from 'three';
 import {
-  allowsVerticalPageScroll,
   beginGesture,
   isTapGesture,
-  moveGesture,
+  moveGestureRespectingPageScroll,
   shouldCaptureAfterMove,
   type GestureState,
   type PointerSample,
@@ -135,10 +134,9 @@ export function Tuner3D({
         onPointerMove={(event) => {
           const current = gesture.current;
           if (!current || current.pointerId !== event.pointerId || disabled) return;
-          const sample = pointerSample(event);
-          if (current.phase === 'pending' && allowsVerticalPageScroll(current, sample)) return;
-          const next = moveGesture(current, sample);
+          const next = moveGestureRespectingPageScroll(current, pointerSample(event));
           gesture.current = next;
+          if (next.phase === 'cancelled') return;
           if (shouldCaptureAfterMove(current, next)) capturePointer(event.nativeEvent.target, event.pointerId);
           if (next.phase === 'active') {
             event.stopPropagation();
@@ -150,6 +148,11 @@ export function Tuner3D({
         onPointerUp={(event) => {
           const current = gesture.current;
           if (!current || current.pointerId !== event.pointerId) return;
+          if (current.phase === 'cancelled') {
+            releasePointer(event.nativeEvent.target, event.pointerId);
+            gesture.current = null;
+            return;
+          }
           event.stopPropagation();
           const local = localPoint(event.point);
           if (!disabled && (current.phase === 'active' || isTapGesture(current))) readLocalPoint(local);
