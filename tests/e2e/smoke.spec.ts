@@ -61,11 +61,19 @@ test('3D mechanisms retain complete mobile fallback controls', async ({ page }) 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/lab/tuner/');
 
+  const decrease = page.getByRole('button', { name: 'Diminuir frequência' });
+  const increase = page.getByRole('button', { name: 'Aumentar frequência' });
+  const slider = page.getByRole('slider', { name: 'Frequência' });
   await expect(page.getByRole('heading', { name: 'Signal tuner' })).toBeVisible();
-  await page.getByRole('slider', { name: 'Frequência' }).fill('73');
+  await slider.fill('73');
   await expect(page.getByText('solved', { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Diminuir frequência' })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Aumentar frequência' })).toBeEnabled();
+  await expect(decrease).toBeDisabled();
+  await expect(increase).toBeDisabled();
+
+  await page.getByRole('button', { name: 'Resetar sessão' }).click();
+  await expect(slider).toHaveValue('41');
+  await expect(decrease).toBeEnabled();
+  await expect(increase).toBeEnabled();
 
   const bodyWidth = await page.locator('body').evaluate((element) => element.scrollWidth);
   expect(bodyWidth).toBeLessThanOrEqual(390);

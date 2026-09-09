@@ -3,6 +3,9 @@ import { expect, type Locator, type Page } from '@playwright/test';
 export type TargetPoint = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
 export async function boxPoint(locator: Locator, point: TargetPoint, inset = 3) {
+  await locator.scrollIntoViewIfNeeded();
+  await locator.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await expect(locator).toBeVisible();
   const box = await locator.boundingBox();
   expect(box).not.toBeNull();
   const resolved = box!;
