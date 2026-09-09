@@ -114,7 +114,7 @@ test('Cipher Rotor: invalid step, complete solution, disabled, navigation return
   await page.goto('/lab/cipher/');
   const plus = (rotor: number) => page.getByRole('button', { name: `Aumentar rotor ${rotor}` });
   const minus = (rotor: number) => page.getByRole('button', { name: `Diminuir rotor ${rotor}` });
-  const rotor = (index: number) => page.getByLabel(`Rotor ${index}`);
+  const rotor = (index: number) => page.getByRole('status', { name: `Rotor ${index}`, exact: true });
   await expect(rotor(1)).toHaveText('0');
 
   await tap(page, plus(1));
