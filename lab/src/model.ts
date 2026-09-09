@@ -15,6 +15,7 @@ export const LAB_REQUIRED_MECHANISMS = [
   'tuner',
   'levers',
   'cipher',
+  'locks',
 ] as const;
 
 export type LabMechanismId = typeof LAB_REQUIRED_MECHANISMS[number] | 'feedback';
@@ -116,9 +117,9 @@ export const LAB_ENTRIES: readonly LabEntry[] = [
     artifact: 'Diagnóstico da sala',
     family: 'Confirmação',
     description: 'O console resume o estado real da sessão e confirma a conclusão.',
-    instruction: 'Resolva os dez mecanismos obrigatórios.',
+    instruction: 'Resolva todos os mecanismos obrigatórios.',
     solution: 'Todos os resultados da sessão em solved.',
-    hints: ['Consulte os estados na navegação.', 'Cada mecanismo obrigatório precisa confirmar sucesso.', 'Complete as dez rotas de teste.'],
+    hints: ['Consulte os estados na navegação.', 'Cada mecanismo obrigatório precisa confirmar sucesso.', 'Complete todas as rotas de teste.'],
     accessibility: 'Mensagens usam texto e aria-live, não apenas cor ou animação.',
   },
   {
@@ -153,6 +154,17 @@ export const LAB_ENTRIES: readonly LabEntry[] = [
     solution: '731',
     hints: ['Três dígitos aparecem em evidências separadas.', 'Cada coluna é um rotor independente.', 'Ajuste para 7, 3 e 1.'],
     accessibility: 'Cada rotor tem aumentar/diminuir em DOM, rótulo individual e leitura textual.',
+  },
+  {
+    id: 'locks',
+    title: 'Crack & Reveal locks',
+    artifact: 'Banco de cadeados digitais',
+    family: 'Lógica / Interface',
+    description: 'Família configurável que reproduz os 14 tipos de cadeado da seção “Experimente você mesmo” como primitivas reutilizáveis da ARE.',
+    instruction: 'Escolha um preset, resolva-o e avance até completar os 14 tipos.',
+    solution: 'A solução muda conforme o preset selecionado e aparece nesta página.',
+    hints: ['Troque o tipo no seletor.', 'Cada preset possui uma resposta objetiva.', 'Use a solução de teste exibida para validar todos os 14.'],
+    accessibility: 'Controles nativos, foco por teclado, Enter para validar texto e estados anunciados em aria-live.',
   },
 ] as const;
 

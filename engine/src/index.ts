@@ -1,6 +1,7 @@
 export { Keypad3D } from './components/keypad/Keypad3D';
 export { createKeypadMachine } from './components/keypad/keypadMachine';
 export { Dial3D } from './components/dial/Dial3D';
+export { LockPanel } from './components/locks/LockPanel';
 export { TypedEventEmitter } from './core/events';
 export type { EventListener, EventMap, EventSubscription } from './core/events';
 export type { ModuleListener, ReadableModule, StatefulModule } from './core/module';
@@ -33,6 +34,8 @@ export type { DialogueState } from './mechanisms/dialogue';
 export { createSequenceState, transitionSequence } from './mechanisms/sequence';
 export type { SequenceEvent, SequenceState, SequenceStatus } from './mechanisms/sequence';
 export { createSwitchValues, matchesSwitchSolution, toggleSwitch } from './mechanisms/switches';
+export { matchesLockSolution, normalizeLockScalar } from './mechanisms/locks';
+export type { LockDefinition, LockValue } from './mechanisms/locks';
 export {
   amberTheme,
   defaultTheme,
