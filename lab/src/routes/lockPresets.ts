@@ -31,8 +31,8 @@ export const LOCK_PRESETS: readonly LockPreset[] = [
   },
   {
     icon: '🧭', label: 'Bússola', artifact: 'Rosa dos ventos',
-    description: 'Versão de oito direções que inclui os pontos cardeais e as diagonais.',
-    instruction: 'Registre a rota pelos oito rumos disponíveis.', solutionLabel: 'N → NE → E → SE',
+    description: 'Rosa dos ventos guiada pela bússola física do aparelho, usando o norte magnético para reconhecer os oito rumos cardeais e diagonais.',
+    instruction: 'Ative a bússola se solicitado e gire o aparelho até cada rumo da sequência; mantenha-o alinhado por um instante para registrar automaticamente.', solutionLabel: 'N → NE → E → SE',
     definition: { id: 'compass', kind: 'compass', solution: ['N', 'NE', 'E', 'SE'], columns: 4 },
   },
   {
