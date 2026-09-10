@@ -18,7 +18,6 @@ import {
   compassDirectionForHeading,
   headingFromOrientation,
   isCompassDirection,
-  isHeadingAligned,
 } from '../../input/deviceCompass';
 import type { LockDefinition } from '../../mechanisms/locks';
 import type { AreTheme, ThreeTheme } from '../../theme';
@@ -433,7 +432,7 @@ function DirectionLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
 }
 
 function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
-  const { palette, theme, sequence, status, onChoose, onSubmit, onClear } = props;
+  const { palette, theme, sequence, status, onSubmit, onClear } = props;
   const [permission, setPermission] = useState<CompassPermissionState>('checking');
   const [heading, setHeading] = useState<number | null>(null);
   const solution = useMemo(
@@ -443,9 +442,6 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
     [props.definition.solution],
   );
   const nextTarget = solution[sequence.length] ?? null;
-  const alignedTarget = heading !== null && nextTarget && isCompassDirection(nextTarget) && isHeadingAligned(heading, nextTarget, 15)
-    ? nextTarget
-    : null;
   const currentDirection = heading === null ? null : compassDirectionForHeading(heading);
   const needleRotation = heading === null ? 0 : heading * Math.PI / 180;
   const directionPositions: Record<string, [number, number, number]> = {
@@ -484,12 +480,6 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
       window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
-
-  useEffect(() => {
-    if (!alignedTarget || status === 'solved') return;
-    const timer = window.setTimeout(() => onChoose(alignedTarget), 650);
-    return () => window.clearTimeout(timer);
-  }, [alignedTarget, onChoose, status]);
 
   useEffect(() => {
     if (status === 'solved' || solution.length === 0 || sequence.length !== solution.length) return;

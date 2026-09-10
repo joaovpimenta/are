@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent, PointerEvent } from 'react';
+import { headingFromOrientation, isCompassDirection, isHeadingAligned } from '../../input/deviceCompass';
 import { matchesLockInput, type LockDefinition, type LockValue } from '../../mechanisms/locks';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle } from '../../theme';
@@ -144,6 +145,13 @@ const noteFrequencies: Record<string, number> = {
   'Dó4': 261.63, 'Ré4': 293.66, 'Mi4': 329.63, 'Fá4': 349.23, 'Sol4': 392, 'Lá4': 440, 'Si4': 493.88,
 };
 
+type CompassDeviceOrientationEvent = Event & {
+  alpha: number | null;
+  absolute: boolean;
+  webkitCompassHeading?: number;
+  webkitCompassAccuracy?: number;
+};
+
 function playNote(note: string) {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext;
@@ -188,6 +196,7 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   const [sequence, setSequence] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState('');
   const [tracingPattern, setTracingPattern] = useState(false);
+  const [compassHeading, setCompassHeading] = useState<number | null>(null);
   const [status, setStatus] = useState<LockStatus>('pending');
   const [message, setMessage] = useState('Aguardando entrada.');
   const variables = toObjectThemeStyle(theme);
@@ -196,7 +205,7 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   const isGeolocation = definition.kind === 'virtual-geolocation' || definition.kind === 'real-geolocation';
 
   const clear = () => {
-    setText(''); setSecondaryText(''); setSequence([]); setCoordinates(''); setTracingPattern(false); setStatus('pending');
+    setText(''); setSecondaryText(''); setSequence([]); setCoordinates(''); setTracingPattern(false); setCompassHeading(null); setStatus('pending');
     setMessage('Aguardando entrada.');
   };
 
@@ -226,6 +235,48 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
     if (definition.kind === 'musical') playNote(value);
     setSequence((current) => [...current, value]);
   };
+
+  const compassSolution = useMemo(
+    () => definition.kind === 'compass' && Array.isArray(definition.solution)
+      ? definition.solution.filter((value): value is string => typeof value === 'string' && isCompassDirection(value))
+      : [],
+    [definition],
+  );
+  const compassTarget = compassSolution[sequence.length];
+
+  useEffect(() => {
+    if (definition.kind !== 'compass' || typeof window === 'undefined') return;
+    const handleOrientation = (rawEvent: Event) => {
+      const event = rawEvent as CompassDeviceOrientationEvent;
+      const nextHeading = headingFromOrientation({
+        alpha: event.alpha,
+        absolute: event.absolute,
+        webkitCompassHeading: event.webkitCompassHeading,
+        webkitCompassAccuracy: event.webkitCompassAccuracy,
+      }, window.screen.orientation?.angle ?? 0);
+      if (nextHeading !== null) setCompassHeading(nextHeading);
+    };
+
+    window.addEventListener('deviceorientationabsolute', handleOrientation);
+    window.addEventListener('deviceorientation', handleOrientation);
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation);
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, [definition.kind]);
+
+  useEffect(() => {
+    if (
+      definition.kind !== 'compass'
+      || status === 'solved'
+      || compassHeading === null
+      || !compassTarget
+      || !isCompassDirection(compassTarget)
+      || !isHeadingAligned(compassHeading, compassTarget, 15)
+    ) return;
+    const timer = window.setTimeout(() => choose(compassTarget), 650);
+    return () => window.clearTimeout(timer);
+  }, [compassHeading, compassTarget, definition.kind, status]);
 
   const inputValue = (): LockValue => {
     if (definition.kind === 'login') return `${text}:${secondaryText}`;
