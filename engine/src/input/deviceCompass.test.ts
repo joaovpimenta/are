@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  EMPTY_COMPASS_HOLD,
   compassDirectionForHeading,
   compassHeadingDistance,
   headingFromOrientation,
   isHeadingAligned,
   normalizeCompassHeading,
+  updateCompassHold,
 } from './deviceCompass';
 
 describe('device compass helpers', () => {
@@ -26,6 +28,43 @@ describe('device compass helpers', () => {
     expect(compassHeadingDistance(355, 5)).toBe(10);
     expect(isHeadingAligned(351, 'N', 10)).toBe(true);
     expect(isHeadingAligned(344, 'N', 10)).toBe(false);
+  });
+
+  it('confirms only after the target remains continuously aligned', () => {
+    const first = updateCompassHold(EMPTY_COMPASS_HOLD, 2, 'N', 1000);
+    expect(first.confirmed).toBeNull();
+    expect(first.state).toEqual({ target: 'N', since: 1000 });
+
+    const early = updateCompassHold(first.state, 359, 'N', 1500);
+    expect(early.confirmed).toBeNull();
+    expect(early.state).toEqual({ target: 'N', since: 1000 });
+
+    const confirmed = updateCompassHold(early.state, 1, 'N', 1650);
+    expect(confirmed.confirmed).toBe('N');
+    expect(confirmed.state).toEqual(EMPTY_COMPASS_HOLD);
+  });
+
+  it('resets dwell when the device leaves the target tolerance', () => {
+    const first = updateCompassHold(EMPTY_COMPASS_HOLD, 0, 'N', 1000);
+    const reset = updateCompassHold(first.state, 45, 'N', 1400);
+    expect(reset).toEqual({ state: EMPTY_COMPASS_HOLD, confirmed: null });
+
+    const restarted = updateCompassHold(reset.state, 3, 'N', 1500);
+    const tooSoon = updateCompassHold(restarted.state, 2, 'N', 2000);
+    expect(tooSoon.confirmed).toBeNull();
+
+    const confirmed = updateCompassHold(tooSoon.state, 1, 'N', 2150);
+    expect(confirmed.confirmed).toBe('N');
+  });
+
+  it('starts a fresh dwell when the next solution target changes', () => {
+    const north = updateCompassHold(EMPTY_COMPASS_HOLD, 0, 'N', 1000);
+    const northConfirmed = updateCompassHold(north.state, 0, 'N', 1650);
+    expect(northConfirmed.confirmed).toBe('N');
+
+    const northEast = updateCompassHold(northConfirmed.state, 45, 'NE', 1700);
+    expect(northEast.state).toEqual({ target: 'NE', since: 1700 });
+    expect(updateCompassHold(northEast.state, 45, 'NE', 2350).confirmed).toBe('NE');
   });
 
   it('prefers WebKit magnetic compass heading when available', () => {
