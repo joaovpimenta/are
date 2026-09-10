@@ -255,13 +255,15 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
     if (definition.kind !== 'compass' || typeof window === 'undefined') return;
     const handleOrientation = (rawEvent: Event) => {
       const event = rawEvent as CompassDeviceOrientationEvent;
+      const isNativeOrientationEvent = typeof window.DeviceOrientationEvent === 'function'
+        && rawEvent instanceof window.DeviceOrientationEvent;
       const nextHeading = headingFromOrientation({
         alpha: event.alpha,
         absolute: event.absolute,
         eventType: rawEvent.type,
         webkitCompassHeading: event.webkitCompassHeading,
         webkitCompassAccuracy: event.webkitCompassAccuracy,
-      }, window.screen.orientation?.angle ?? 0);
+      }, isNativeOrientationEvent ? window.screen.orientation?.angle ?? 0 : 0);
       if (nextHeading === null) return;
       const target = currentCompassTarget.current;
       if (

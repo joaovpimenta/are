@@ -463,7 +463,9 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
     if (typeof window === 'undefined') return;
     const handleOrientation = (rawEvent: Event) => {
       const event = rawEvent as CompassDeviceOrientationEvent;
-      const screenAngle = window.screen.orientation?.angle ?? 0;
+      const isNativeOrientationEvent = typeof window.DeviceOrientationEvent === 'function'
+        && rawEvent instanceof window.DeviceOrientationEvent;
+      const screenAngle = isNativeOrientationEvent ? window.screen.orientation?.angle ?? 0 : 0;
       const nextHeading = headingFromOrientation({
         alpha: event.alpha,
         absolute: event.absolute,
