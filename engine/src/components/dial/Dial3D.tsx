@@ -12,6 +12,7 @@ import {
   type GestureState,
   type PointerSample,
 } from '../../input/gesture';
+import type { CanvasBounds } from '../../input/coordinates';
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialRotation, dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
@@ -69,6 +70,7 @@ export function Dial3D({
   const dialSpace = useRef<Group>(null);
   const rotor = useRef<Group>(null);
   const gesture = useRef<GestureState | null>(null);
+  const pointerBounds = useRef<CanvasBounds | null>(null);
   const [hovered, setHovered] = useState(false);
   const solved = value === target;
   const range = max - min + 1;
@@ -96,10 +98,8 @@ export function Dial3D({
   const readLocalPoint = (point: Vector3) => {
     if (!disabled) onChange(dialValueFromClockPoint(point.x, point.y, { min, max }));
   };
-  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3) => {
-    const target = event.nativeEvent.target;
-    if (!(target instanceof Element)) return;
-    recordPointerDebug(pointerSample(event), canvasHost.getBoundingClientRect(), event.object.name || 'dial', local);
+  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3, bounds = pointerBounds.current ?? canvasHost.getBoundingClientRect()) => {
+    recordPointerDebug(pointerSample(event), bounds, event.object.name || 'dial', local);
   };
 
   return (
@@ -135,7 +135,8 @@ export function Dial3D({
           if (disabled) return;
           event.stopPropagation();
           gesture.current = beginGesture('rotate', pointerSample(event));
-          debug(event, localPoint(event.point));
+          pointerBounds.current = canvasHost.getBoundingClientRect();
+          debug(event, localPoint(event.point), pointerBounds.current);
         }}
         onPointerMove={(event) => {
           const current = gesture.current;
@@ -165,13 +166,16 @@ export function Dial3D({
           debug(event, local);
           releasePointer(event.nativeEvent.target, event.pointerId);
           gesture.current = null;
+          pointerBounds.current = null;
         }}
         onPointerCancel={(event) => {
           releasePointer(event.nativeEvent.target, event.pointerId);
           gesture.current = null;
+          pointerBounds.current = null;
         }}
         onLostPointerCapture={() => {
           gesture.current = null;
+          pointerBounds.current = null;
         }}
         onWheel={(event) => {
           if (disabled) return;

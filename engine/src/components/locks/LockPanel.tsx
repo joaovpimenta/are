@@ -1,5 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, PointerEvent } from 'react';
 import { headingFromOrientation, isCompassDirection, isHeadingAligned } from '../../input/deviceCompass';
 import { matchesLockInput, type LockDefinition, type LockValue } from '../../mechanisms/locks';
@@ -152,8 +152,6 @@ type CompassDeviceOrientationEvent = Event & {
   webkitCompassAccuracy?: number;
 };
 
-const COMPASS_CONFIRMATION_MS = 320;
-
 function playNote(note: string) {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext;
@@ -198,16 +196,20 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   const [sequence, setSequence] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState('');
   const [tracingPattern, setTracingPattern] = useState(false);
-  const [compassHeading, setCompassHeading] = useState<number | null>(null);
   const [status, setStatus] = useState<LockStatus>('pending');
   const [message, setMessage] = useState('Aguardando entrada.');
+  const compassRegistration = useRef<string | null>(null);
+  const currentStatus = useRef<LockStatus>('pending');
+  const currentCompassTarget = useRef<string | undefined>(undefined);
+  const chooseCompassDirection = useRef<(value: string) => void>(() => undefined);
   const variables = toObjectThemeStyle(theme);
   const options = useMemo(() => definition.options ?? defaultOptions[definition.kind] ?? [], [definition]);
   const columns = definition.columns ?? (definition.kind === 'pattern' ? 3 : definition.kind === 'grid-5x5' ? 5 : 4);
   const isGeolocation = definition.kind === 'virtual-geolocation' || definition.kind === 'real-geolocation';
 
   const clear = () => {
-    setText(''); setSecondaryText(''); setSequence([]); setCoordinates(''); setTracingPattern(false); setCompassHeading(null); setStatus('pending');
+    setText(''); setSecondaryText(''); setSequence([]); setCoordinates(''); setTracingPattern(false); setStatus('pending');
+    compassRegistration.current = null;
     setMessage('Aguardando entrada.');
   };
 
@@ -245,6 +247,9 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
     [definition],
   );
   const compassTarget = compassSolution[sequence.length];
+  currentStatus.current = status;
+  currentCompassTarget.current = compassTarget;
+  chooseCompassDirection.current = choose;
 
   useEffect(() => {
     if (definition.kind !== 'compass' || typeof window === 'undefined') return;
@@ -257,7 +262,18 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
         webkitCompassHeading: event.webkitCompassHeading,
         webkitCompassAccuracy: event.webkitCompassAccuracy,
       }, window.screen.orientation?.angle ?? 0);
-      if (nextHeading !== null) setCompassHeading(nextHeading);
+      if (nextHeading === null) return;
+      const target = currentCompassTarget.current;
+      if (
+        currentStatus.current !== 'solved'
+        && target
+        && isCompassDirection(target)
+        && isHeadingAligned(nextHeading, target, 15)
+        && compassRegistration.current !== target
+      ) {
+        compassRegistration.current = target;
+        chooseCompassDirection.current(target);
+      }
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation);
@@ -267,19 +283,6 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
       window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, [definition.kind]);
-
-  useEffect(() => {
-    if (
-      definition.kind !== 'compass'
-      || status === 'solved'
-      || compassHeading === null
-      || !compassTarget
-      || !isCompassDirection(compassTarget)
-      || !isHeadingAligned(compassHeading, compassTarget, 15)
-    ) return;
-    const timer = window.setTimeout(() => choose(compassTarget), COMPASS_CONFIRMATION_MS);
-    return () => window.clearTimeout(timer);
-  }, [compassHeading, compassTarget, definition.kind, status]);
 
   const inputValue = (): LockValue => {
     if (definition.kind === 'login') return `${text}:${secondaryText}`;
