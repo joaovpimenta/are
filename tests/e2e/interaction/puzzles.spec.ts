@@ -14,6 +14,32 @@ async function resetSession(page: Page) {
   await tap(page, page.getByRole('button', { name: 'Resetar sessão' }));
 }
 
+async function holdCompassHeading(page: Page, magneticHeading: number) {
+  await page.evaluate(async (heading) => {
+    const screenAngle = window.screen.orientation?.angle ?? 0;
+    const alpha = ((360 + screenAngle - heading) % 360 + 360) % 360;
+
+    await new Promise<void>((resolve) => {
+      let sample = 0;
+      const dispatch = () => {
+        const event = new Event('deviceorientationabsolute');
+        Object.defineProperties(event, {
+          alpha: { value: alpha },
+          absolute: { value: true },
+        });
+        window.dispatchEvent(event);
+        sample += 1;
+        if (sample >= 18) {
+          window.clearInterval(interval);
+          resolve();
+        }
+      };
+      const interval = window.setInterval(dispatch, 60);
+      dispatch();
+    });
+  }, magneticHeading);
+}
+
 test('Keypad: initial, invalid, repeated input, resolution, disabled and reset', async ({ page }) => {
   await page.goto('/lab/keypad/');
   const key = (label: string) => page.getByRole('button', { name: label, exact: true });
@@ -153,24 +179,17 @@ test('Compass lock: device orientation registers eight-way headings without clic
   await section.scrollIntoViewIfNeeded();
   const console = section.getByRole('group', { name: 'Bússola · console operacional' });
   await expect(console.locator('canvas')).toHaveCount(1);
-  await expect(console.getByLabel('Entrada atual')).toContainText('Nenhuma posição selecionada.');
-
-  for (const heading of [0, 45, 90, 135]) {
-    await page.evaluate((magneticHeading) => {
-      const event = new Event('deviceorientationabsolute');
-      Object.defineProperties(event, {
-        alpha: { value: (360 - magneticHeading) % 360 },
-        absolute: { value: true },
-      });
-      window.dispatchEvent(event);
-    }, heading);
-    await page.waitForTimeout(720);
-  }
+  await expect(console.getByText(/AGUARDANDO NORTE MAGNÉTICO/)).toBeVisible();
 
   const current = console.getByLabel('Entrada atual');
-  await expect(current).toContainText('N');
-  await expect(current).toContainText('NE');
-  await expect(current).toContainText('E');
-  await expect(current).toContainText('SE');
+  await expect(current.locator('span')).toHaveText(['Nenhuma posição selecionada.']);
+
+  const headings = [0, 45, 90, 135] as const;
+  const expected = ['N', 'NE', 'E', 'SE'];
+  for (let index = 0; index < headings.length; index += 1) {
+    await holdCompassHeading(page, headings[index]);
+    await expect(current.locator('span')).toHaveText(expected.slice(0, index + 1));
+  }
+
   await expect(console.getByRole('status')).toHaveText('Cadeado aberto. Solução confirmada.');
 });

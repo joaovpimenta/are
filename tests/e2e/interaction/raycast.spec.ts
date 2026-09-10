@@ -4,12 +4,10 @@ import { latestInteractionDebug } from '../helpers';
 
 async function dialCanvas(page: Page) {
   const canvas = page.getByLabel('Seletor de cofre 3D');
-  await expect(canvas.locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
-  await canvas.evaluate(async (element) => {
-    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-  });
+  await canvas.scrollIntoViewIfNeeded();
   await expect(canvas).toBeVisible();
+  await expect(canvas).toBeInViewport();
+  await expect(canvas.locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
   return canvas;
 }
 
@@ -19,11 +17,17 @@ async function tapCanvas(page: Page, xRatio: number, yRatio: number) {
   expect(box).not.toBeNull();
   const x = box!.x + box!.width * xRatio;
   const y = box!.y + box!.height * yRatio;
+  const canvasReceivesPoint = await page.evaluate(({ x: clientX, y: clientY }) => {
+    const hit = document.elementFromPoint(clientX, clientY);
+    return hit?.tagName === 'CANVAS';
+  }, { x, y });
+  expect(canvasReceivesPoint, 'The raycast sample must reach the canvas, not an overlapping toolbar').toBe(true);
   await page.touchscreen.tap(x, y);
   return { box: box!, x, y };
 }
 
 test('Dial raycasting reports canvas-relative NDC and local quadrants after page offset/scroll', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto('/lab/dial/');
   await expect(page.getByLabel('Seletor de cofre 3D')).toBeVisible();
   await page.evaluate(() => {

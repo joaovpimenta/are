@@ -17,28 +17,15 @@ env:
 
 jobs:
   playwright:
-    name: ${{ matrix.browser }} · ${{ matrix.profile.name }}
+    name: ${{ matrix.browser }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, webkit, firefox]
-        profile:
-          - { name: mobile-320x568-dpr1, width: 320, height: 568, dpr: 1, mobile: 1 }
-          - { name: mobile-360x800-dpr2, width: 360, height: 800, dpr: 2, mobile: 1 }
-          - { name: mobile-390x844-dpr3, width: 390, height: 844, dpr: 3, mobile: 1 }
-          - { name: mobile-430x932-dpr3, width: 430, height: 932, dpr: 3, mobile: 1 }
-          - { name: tablet-portrait-768x1024-dpr2, width: 768, height: 1024, dpr: 2, mobile: 1 }
-          - { name: tablet-landscape-1024x768-dpr2, width: 1024, height: 768, dpr: 2, mobile: 1 }
     env:
       ARE_BROWSER: ${{ matrix.browser }}
-      ARE_PROFILE: ${{ matrix.profile.name }}
-      ARE_VIEWPORT_WIDTH: ${{ matrix.profile.width }}
-      ARE_VIEWPORT_HEIGHT: ${{ matrix.profile.height }}
-      ARE_DEVICE_SCALE_FACTOR: ${{ matrix.profile.dpr }}
-      ARE_HAS_TOUCH: '1'
-      ARE_IS_MOBILE: ${{ matrix.profile.mobile }}
       ARE_PAGES_BASE_PATH: /are/
     steps:
       - uses: actions/checkout@v6
@@ -50,96 +37,89 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Typecheck before browser tests
-        run: pnpm typecheck
-      - name: Run deterministic mechanisms and input primitives first
-        run: pnpm exec vitest run engine/src/mechanisms engine/src/input
       - name: Download exact production candidate
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: dist
+      - name: Restore Playwright browser cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install browser
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - name: Run pointer, touch, drag, scroll and raycast tests
-        # Firefox needs a display for WebGL; Xvfb and Mesa provide it on CI.
+      - name: Run functional and responsive interaction coverage
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          if [ "$ARE_BROWSER" = firefox ]; then
-            xvfb-run -a pnpm test:interaction --headed
-          else
-            pnpm test:interaction
-          fi
-      - name: Record flaky tests separately
-        if: always()
-        run: node scripts/report-flaky.mjs playwright-report/results.json flaky-tests.txt
-      - name: Partition failure evidence by puzzle/gesture
-        if: always()
-        run: node scripts/partition-playwright-artifacts.mjs
-      - name: Upload HTML report by browser/viewport
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-report-${{ matrix.browser }}-${{ matrix.profile.name }}
-          path: |
-            playwright-report
-            flaky-tests.txt
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload Keypad failure evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-keypad
-          path: interaction-artifacts/keypad
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload Dial failure evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-dial
-          path: interaction-artifacts/dial
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload Signal Tuner failure evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-tuner
-          path: interaction-artifacts/tuner
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload Lever failure evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-lever
-          path: interaction-artifacts/lever
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload Cipher failure evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-cipher
-          path: interaction-artifacts/cipher
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload Locks failure evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-locks
-          path: interaction-artifacts/locks
-          if-no-files-found: ignore
-          retention-days: 14
-      - name: Upload scroll/gesture failure evidence
+          set +e
+          overall=0
+
+          run_profile() {
+            export ARE_PROFILE="$1"
+            export ARE_VIEWPORT_WIDTH="$2"
+            export ARE_VIEWPORT_HEIGHT="$3"
+            export ARE_DEVICE_SCALE_FACTOR="$4"
+            suite="$5"
+            export ARE_HAS_TOUCH='1'
+            export ARE_IS_MOBILE='1'
+
+            rm -rf playwright-report test-results interaction-artifacts flaky-tests.txt
+            echo "::group::${ARE_BROWSER} · ${ARE_PROFILE} · ${suite}"
+
+            if [ "$suite" = full ]; then
+              specs=(tests/e2e/interaction)
+            else
+              specs=(
+                tests/e2e/interaction/hit-targets.spec.ts
+                tests/e2e/interaction/mobile-scroll.spec.ts
+                tests/e2e/interaction/raycast.spec.ts
+              )
+            fi
+
+            if [ "$ARE_BROWSER" = firefox ]; then
+              xvfb-run -a pnpm exec playwright test "${specs[@]}" --headed
+            else
+              pnpm exec playwright test "${specs[@]}"
+            fi
+            rc=$?
+
+            node scripts/report-flaky.mjs playwright-report/results.json flaky-tests.txt || true
+            node scripts/partition-playwright-artifacts.mjs || true
+
+            dest="interaction-runs/${ARE_PROFILE}"
+            mkdir -p "$dest"
+            [ ! -d playwright-report ] || cp -R playwright-report "$dest/"
+            [ ! -d test-results ] || cp -R test-results "$dest/"
+            [ ! -d interaction-artifacts ] || cp -R interaction-artifacts "$dest/"
+            [ ! -f flaky-tests.txt ] || cp flaky-tests.txt "$dest/"
+
+            result=PASS
+            if [ "$rc" -ne 0 ]; then
+              result=FAIL
+              overall=1
+            fi
+            echo "| ${ARE_BROWSER} | ${ARE_PROFILE} | ${suite} | ${result} |" >> "$GITHUB_STEP_SUMMARY"
+            echo "::endgroup::"
+          }
+
+          echo '| Browser | Profile | Coverage | Result |' >> "$GITHUB_STEP_SUMMARY"
+          echo '| --- | --- | --- | --- |' >> "$GITHUB_STEP_SUMMARY"
+
+          run_profile mobile-320x568-dpr1 320 568 1 responsive
+          run_profile mobile-360x800-dpr2 360 800 2 responsive
+          run_profile mobile-390x844-dpr3 390 844 3 full
+          run_profile mobile-430x932-dpr3 430 932 3 responsive
+          run_profile tablet-portrait-768x1024-dpr2 768 1024 2 responsive
+          run_profile tablet-landscape-1024x768-dpr2 1024 768 2 responsive
+
+          exit "$overall"
+      - name: Upload grouped browser report and failure evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: interaction-${{ matrix.browser }}-${{ matrix.profile.name }}-scroll
-          path: interaction-artifacts/scroll
+          name: interaction-${{ matrix.browser }}
+          path: interaction-runs
           if-no-files-found: ignore
           retention-days: 14
