@@ -13,12 +13,27 @@ export const COMPASS_DIRECTION_HEADINGS: Record<CompassDirection, number> = {
   NO: 315,
 };
 
+export const COMPASS_HOLD_DURATION_MS = 650;
+export const COMPASS_ALIGNMENT_TOLERANCE_DEGREES = 15;
+
 export type CompassOrientationSample = {
   alpha: number | null;
   absolute?: boolean;
   webkitCompassHeading?: number;
   webkitCompassAccuracy?: number;
 };
+
+export type CompassHoldState = {
+  target: CompassDirection | null;
+  since: number | null;
+};
+
+export type CompassHoldUpdate = {
+  state: CompassHoldState;
+  confirmed: CompassDirection | null;
+};
+
+export const EMPTY_COMPASS_HOLD: CompassHoldState = { target: null, since: null };
 
 export function normalizeCompassHeading(value: number): number {
   return ((value % 360) + 360) % 360;
@@ -41,9 +56,32 @@ export function isCompassDirection(value: string): value is CompassDirection {
 export function isHeadingAligned(
   heading: number,
   direction: CompassDirection,
-  toleranceDegrees = 15,
+  toleranceDegrees = COMPASS_ALIGNMENT_TOLERANCE_DEGREES,
 ): boolean {
   return compassHeadingDistance(heading, COMPASS_DIRECTION_HEADINGS[direction]) <= toleranceDegrees;
+}
+
+export function updateCompassHold(
+  state: CompassHoldState,
+  heading: number,
+  target: CompassDirection | null,
+  timestampMs: number,
+  holdDurationMs = COMPASS_HOLD_DURATION_MS,
+  toleranceDegrees = COMPASS_ALIGNMENT_TOLERANCE_DEGREES,
+): CompassHoldUpdate {
+  if (!target || !isHeadingAligned(heading, target, toleranceDegrees)) {
+    return { state: EMPTY_COMPASS_HOLD, confirmed: null };
+  }
+
+  if (state.target !== target || state.since === null) {
+    return { state: { target, since: timestampMs }, confirmed: null };
+  }
+
+  if (timestampMs - state.since < holdDurationMs) {
+    return { state, confirmed: null };
+  }
+
+  return { state: EMPTY_COMPASS_HOLD, confirmed: target };
 }
 
 export function headingFromOrientation(
