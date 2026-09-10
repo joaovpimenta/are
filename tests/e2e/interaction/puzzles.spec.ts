@@ -17,15 +17,17 @@ async function resetSession(page: Page) {
 async function holdCompassHeading(page: Page, magneticHeading: number) {
   await page.evaluate(async (heading) => {
     const dispatch = () => {
+      const screenAngle = window.screen.orientation?.angle ?? 0;
+      const alpha = ((360 + screenAngle - heading) % 360 + 360) % 360;
       const event = new Event('deviceorientationabsolute');
       Object.defineProperties(event, {
-        alpha: { value: (360 - heading) % 360 },
+        alpha: { value: alpha },
         absolute: { value: true },
       });
       window.dispatchEvent(event);
     };
 
-    for (let sample = 0; sample < 9; sample += 1) {
+    for (let sample = 0; sample < 12; sample += 1) {
       dispatch();
       await new Promise((resolve) => window.setTimeout(resolve, 100));
     }
@@ -171,16 +173,16 @@ test('Compass lock: device orientation registers eight-way headings without clic
   await section.scrollIntoViewIfNeeded();
   const console = section.getByRole('group', { name: 'Bússola · console operacional' });
   await expect(console.locator('canvas')).toHaveCount(1);
-  await expect(console.getByLabel('Entrada atual')).toContainText('Nenhuma posição selecionada.');
-
-  for (const heading of [0, 45, 90, 135]) {
-    await holdCompassHeading(page, heading);
-  }
 
   const current = console.getByLabel('Entrada atual');
-  await expect(current).toContainText('N');
-  await expect(current).toContainText('NE');
-  await expect(current).toContainText('E');
-  await expect(current).toContainText('SE');
+  await expect(current.locator('span')).toHaveText(['Nenhuma posição selecionada.']);
+
+  const headings = [0, 45, 90, 135] as const;
+  const expected = ['N', 'NE', 'E', 'SE'];
+  for (let index = 0; index < headings.length; index += 1) {
+    await holdCompassHeading(page, headings[index]);
+    await expect(current.locator('span')).toHaveText(expected.slice(0, index + 1));
+  }
+
   await expect(console.getByRole('status')).toHaveText('Cadeado aberto. Solução confirmada.');
 });
