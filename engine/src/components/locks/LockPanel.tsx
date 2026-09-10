@@ -253,6 +253,7 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
       const nextHeading = headingFromOrientation({
         alpha: event.alpha,
         absolute: event.absolute,
+        eventType: rawEvent.type,
         webkitCompassHeading: event.webkitCompassHeading,
         webkitCompassAccuracy: event.webkitCompassAccuracy,
       }, window.screen.orientation?.angle ?? 0);

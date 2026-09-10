@@ -16,6 +16,7 @@ export const COMPASS_DIRECTION_HEADINGS: Record<CompassDirection, number> = {
 export type CompassOrientationSample = {
   alpha: number | null;
   absolute?: boolean;
+  eventType?: string;
   webkitCompassHeading?: number;
   webkitCompassAccuracy?: number;
 };
@@ -53,7 +54,11 @@ export function headingFromOrientation(
   const webkitHeading = sample.webkitCompassHeading;
   const webkitAccuracy = sample.webkitCompassAccuracy;
 
-  if (sample.absolute === true && typeof sample.alpha === 'number' && Number.isFinite(sample.alpha)) {
+  if (
+    (sample.absolute === true || sample.eventType === 'deviceorientationabsolute')
+    && typeof sample.alpha === 'number'
+    && Number.isFinite(sample.alpha)
+  ) {
     return normalizeCompassHeading(360 - sample.alpha + screenAngle);
   }
 

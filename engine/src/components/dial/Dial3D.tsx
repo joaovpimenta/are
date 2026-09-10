@@ -1,5 +1,5 @@
 import { Html, RoundedBox } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
@@ -75,6 +75,7 @@ export function Dial3D({
   const targetRotation = dialRotation(value, { min, max });
   const palette = toThreeTheme(theme);
   const debugHitTargets = interactionDebugEnabled();
+  const canvasHost = useThree(({ gl }) => gl.domElement.parentElement?.parentElement ?? gl.domElement);
 
   useFrame((_, delta) => {
     if (!rotor.current) return;
@@ -98,11 +99,7 @@ export function Dial3D({
   const debug = (event: ThreeEvent<PointerEvent>, local: Vector3) => {
     const target = event.nativeEvent.target;
     if (!(target instanceof Element)) return;
-    const currentTarget = event.nativeEvent.currentTarget;
-    const boundsTarget = currentTarget instanceof Element
-      ? currentTarget
-      : target.closest('[aria-label="Seletor de cofre 3D"]') ?? target;
-    recordPointerDebug(pointerSample(event), boundsTarget.getBoundingClientRect(), event.object.name || 'dial', local);
+    recordPointerDebug(pointerSample(event), canvasHost.getBoundingClientRect(), event.object.name || 'dial', local);
   };
 
   return (

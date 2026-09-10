@@ -467,6 +467,7 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
       const nextHeading = headingFromOrientation({
         alpha: event.alpha,
         absolute: event.absolute,
+        eventType: rawEvent.type,
         webkitCompassHeading: event.webkitCompassHeading,
         webkitCompassAccuracy: event.webkitCompassAccuracy,
       }, screenAngle);

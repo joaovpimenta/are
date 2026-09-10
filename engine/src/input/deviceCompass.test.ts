@@ -46,6 +46,16 @@ describe('device compass helpers', () => {
     })).toBe(45);
   });
 
+  it('recognizes the absolute orientation event type when a browser omits the flag', () => {
+    expect(headingFromOrientation({
+      alpha: 315,
+      absolute: false,
+      eventType: 'deviceorientationabsolute',
+      webkitCompassHeading: 0,
+      webkitCompassAccuracy: 12,
+    })).toBe(45);
+  });
+
   it('rejects an uncalibrated WebKit compass', () => {
     expect(headingFromOrientation({
       alpha: 12,
