@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { lazy, Suspense } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import type { LabMechanismId, LabRouteProps } from '../model';
+import { DialRoute } from './DialRoute';
 
 const styles = stylex.create({
   loading: {
@@ -25,7 +26,10 @@ function routeModule<T extends Record<string, ComponentType<LabRouteProps>>>(
 
 const routes: Record<LabMechanismId, ComponentType<LabRouteProps>> = {
   keypad: routeModule(() => import('./KeypadRoute'), 'KeypadRoute'),
-  dial: routeModule(() => import('./DialRoute'), 'DialRoute'),
+  // The dial is the primary touch surface and is also the return target from
+  // the cipher test. Keep it in the Lab shell so a narrow WebKit viewport
+  // cannot strand the user on the route loading fallback after a transition.
+  dial: DialRoute,
   inventory: routeModule(() => import('./InventoryRoute'), 'InventoryRoute'),
   dialogue: routeModule(() => import('./DialogueRoute'), 'DialogueRoute'),
   sequence: routeModule(() => import('./SequenceRoute'), 'SequenceRoute'),

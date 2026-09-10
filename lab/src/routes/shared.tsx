@@ -1,5 +1,19 @@
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
+
+function SurfaceTouchAction({ value }: { value: 'pan-y' | 'none' }) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    gl.domElement.style.touchAction = value;
+    return () => {
+      gl.domElement.style.touchAction = '';
+    };
+  }, [gl, value]);
+
+  return null;
+}
 
 function SceneReady() {
   useFrame(({ gl }) => {
@@ -23,10 +37,12 @@ export function HardwareCanvas({
   children,
   cameraZ = 7.5,
   ariaLabel,
+  touchAction = 'pan-y',
 }: {
   children: ReactNode;
   cameraZ?: number;
   ariaLabel: string;
+  touchAction?: 'pan-y' | 'none';
 }) {
   return (
     <Canvas
@@ -37,6 +53,7 @@ export function HardwareCanvas({
       gl={{ antialias: true, powerPreference: 'high-performance' }}
     >
       <SceneLighting />
+      <SurfaceTouchAction value={touchAction} />
       {children}
       <SceneReady />
     </Canvas>
