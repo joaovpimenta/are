@@ -132,6 +132,7 @@ export function Dial3D({
         ref={dialSpace}
         onPointerEnter={(event) => {
           event.stopPropagation();
+          if (!disabled && pointerBounds.current === null) pointerBounds.current = eventSourceBounds(event);
           if (!disabled) setHovered(true);
         }}
         onPointerLeave={() => setHovered(false)}
@@ -139,7 +140,7 @@ export function Dial3D({
           if (disabled) return;
           event.stopPropagation();
           gesture.current = beginGesture('rotate', pointerSample(event));
-          pointerBounds.current = eventSourceBounds(event);
+          pointerBounds.current ??= eventSourceBounds(event);
           debug(event, localPoint(event.point), pointerBounds.current);
         }}
         onPointerMove={(event) => {
