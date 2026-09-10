@@ -15,6 +15,7 @@ export const COMPASS_DIRECTION_HEADINGS: Record<CompassDirection, number> = {
 
 export const COMPASS_HOLD_DURATION_MS = 650;
 export const COMPASS_ALIGNMENT_TOLERANCE_DEGREES = 15;
+export const COMPASS_MAX_SAMPLE_GAP_MS = 250;
 
 export type CompassOrientationSample = {
   alpha: number | null;
@@ -26,6 +27,7 @@ export type CompassOrientationSample = {
 export type CompassHoldState = {
   target: CompassDirection | null;
   since: number | null;
+  lastSampleAt: number | null;
 };
 
 export type CompassHoldUpdate = {
@@ -33,7 +35,7 @@ export type CompassHoldUpdate = {
   confirmed: CompassDirection | null;
 };
 
-export const EMPTY_COMPASS_HOLD: CompassHoldState = { target: null, since: null };
+export const EMPTY_COMPASS_HOLD: CompassHoldState = { target: null, since: null, lastSampleAt: null };
 
 export function normalizeCompassHeading(value: number): number {
   return ((value % 360) + 360) % 360;
@@ -68,17 +70,31 @@ export function updateCompassHold(
   timestampMs: number,
   holdDurationMs = COMPASS_HOLD_DURATION_MS,
   toleranceDegrees = COMPASS_ALIGNMENT_TOLERANCE_DEGREES,
+  maxSampleGapMs = COMPASS_MAX_SAMPLE_GAP_MS,
 ): CompassHoldUpdate {
   if (!target || !isHeadingAligned(heading, target, toleranceDegrees)) {
     return { state: EMPTY_COMPASS_HOLD, confirmed: null };
   }
 
-  if (state.target !== target || state.since === null) {
-    return { state: { target, since: timestampMs }, confirmed: null };
+  const sampleStreamRestarted = state.lastSampleAt === null
+    || timestampMs < state.lastSampleAt
+    || timestampMs - state.lastSampleAt > maxSampleGapMs;
+
+  if (state.target !== target || state.since === null || sampleStreamRestarted) {
+    return {
+      state: { target, since: timestampMs, lastSampleAt: timestampMs },
+      confirmed: null,
+    };
   }
 
+  const nextState: CompassHoldState = {
+    target,
+    since: state.since,
+    lastSampleAt: timestampMs,
+  };
+
   if (timestampMs - state.since < holdDurationMs) {
-    return { state, confirmed: null };
+    return { state: nextState, confirmed: null };
   }
 
   return { state: EMPTY_COMPASS_HOLD, confirmed: target };
