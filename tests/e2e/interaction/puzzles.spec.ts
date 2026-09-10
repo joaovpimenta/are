@@ -14,24 +14,30 @@ async function resetSession(page: Page) {
   await tap(page, page.getByRole('button', { name: 'Resetar sessão' }));
 }
 
-async function dispatchCompassHeading(page: Page, magneticHeading: number) {
-  await page.evaluate((heading) => {
+async function holdCompassHeading(page: Page, magneticHeading: number) {
+  await page.evaluate(async (heading) => {
     const screenAngle = window.screen.orientation?.angle ?? 0;
     const alpha = ((360 + screenAngle - heading) % 360 + 360) % 360;
-    const event = new Event('deviceorientationabsolute');
-    Object.defineProperties(event, {
-      alpha: { value: alpha },
-      absolute: { value: true },
-    });
-    window.dispatchEvent(event);
-  }, magneticHeading);
-}
 
-async function holdCompassHeading(page: Page, magneticHeading: number) {
-  for (let sample = 0; sample < 10; sample += 1) {
-    await dispatchCompassHeading(page, magneticHeading);
-    if (sample < 9) await new Promise((resolve) => setTimeout(resolve, 80));
-  }
+    await new Promise<void>((resolve) => {
+      let sample = 0;
+      const dispatch = () => {
+        const event = new Event('deviceorientationabsolute');
+        Object.defineProperties(event, {
+          alpha: { value: alpha },
+          absolute: { value: true },
+        });
+        window.dispatchEvent(event);
+        sample += 1;
+        if (sample >= 18) {
+          window.clearInterval(interval);
+          resolve();
+        }
+      };
+      const interval = window.setInterval(dispatch, 60);
+      dispatch();
+    });
+  }, magneticHeading);
 }
 
 test('Keypad: initial, invalid, repeated input, resolution, disabled and reset', async ({ page }) => {
