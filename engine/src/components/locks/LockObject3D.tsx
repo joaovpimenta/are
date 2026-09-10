@@ -464,7 +464,7 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
   }, []);
 
   useEffect(() => {
-    if (permission !== 'granted' || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
     const handleOrientation = (rawEvent: Event) => {
       const event = rawEvent as CompassDeviceOrientationEvent;
       const screenAngle = window.screen.orientation?.angle ?? 0;
@@ -483,7 +483,7 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
       window.removeEventListener('deviceorientationabsolute', handleOrientation);
       window.removeEventListener('deviceorientation', handleOrientation);
     };
-  }, [permission]);
+  }, []);
 
   useEffect(() => {
     if (!alignedTarget || status === 'solved') return;

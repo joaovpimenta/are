@@ -155,6 +155,7 @@ export const labStyles = stylex.create({
     backgroundColor: 'color-mix(in srgb, var(--are-surface) 90%, transparent)',
     boxShadow: '0 18px 50px rgba(0,0,0,.18)',
     overflow: 'hidden',
+    overflowX: 'hidden',
   },
   navigationHeader: {
     display: 'flex',

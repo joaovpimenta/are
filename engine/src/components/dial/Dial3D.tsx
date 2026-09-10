@@ -98,7 +98,8 @@ export function Dial3D({
   const debug = (event: ThreeEvent<PointerEvent>, local: Vector3) => {
     const target = event.nativeEvent.target;
     if (!(target instanceof Element)) return;
-    recordPointerDebug(pointerSample(event), target.getBoundingClientRect(), event.object.name || 'dial', local);
+    const boundsTarget = target.closest('[aria-label="Seletor de cofre 3D"]') ?? target;
+    recordPointerDebug(pointerSample(event), boundsTarget.getBoundingClientRect(), event.object.name || 'dial', local);
   };
 
   return (
