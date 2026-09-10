@@ -101,6 +101,10 @@ export function Dial3D({
   const debug = (event: ThreeEvent<PointerEvent>, local: Vector3, bounds = pointerBounds.current ?? canvasHost.getBoundingClientRect()) => {
     recordPointerDebug(pointerSample(event), bounds, event.object.name || 'dial', local);
   };
+  const eventSourceBounds = (event: ThreeEvent<PointerEvent>): CanvasBounds => {
+    const source = event.nativeEvent.currentTarget;
+    return source instanceof Element ? source.getBoundingClientRect() : canvasHost.getBoundingClientRect();
+  };
 
   return (
     <group position={[0, -0.05, 0]}>
@@ -135,7 +139,7 @@ export function Dial3D({
           if (disabled) return;
           event.stopPropagation();
           gesture.current = beginGesture('rotate', pointerSample(event));
-          pointerBounds.current = canvasHost.getBoundingClientRect();
+          pointerBounds.current = eventSourceBounds(event);
           debug(event, localPoint(event.point), pointerBounds.current);
         }}
         onPointerMove={(event) => {
