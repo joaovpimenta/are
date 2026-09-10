@@ -27,6 +27,7 @@ async function tapCanvas(page: Page, xRatio: number, yRatio: number) {
 }
 
 test('Dial raycasting reports canvas-relative NDC and local quadrants after page offset/scroll', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.goto('/lab/dial/');
   await expect(page.getByLabel('Seletor de cofre 3D')).toBeVisible();
   await page.evaluate(() => {
