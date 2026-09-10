@@ -152,6 +152,8 @@ type CompassDeviceOrientationEvent = Event & {
   webkitCompassAccuracy?: number;
 };
 
+const COMPASS_CONFIRMATION_MS = 320;
+
 function playNote(note: string) {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext;
@@ -274,7 +276,7 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
       || !isCompassDirection(compassTarget)
       || !isHeadingAligned(compassHeading, compassTarget, 15)
     ) return;
-    const timer = window.setTimeout(() => choose(compassTarget), 650);
+    const timer = window.setTimeout(() => choose(compassTarget), COMPASS_CONFIRMATION_MS);
     return () => window.clearTimeout(timer);
   }, [compassHeading, compassTarget, definition.kind, status]);
 
