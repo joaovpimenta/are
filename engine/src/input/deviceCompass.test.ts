@@ -37,6 +37,15 @@ describe('device compass helpers', () => {
     })).toBe(91);
   });
 
+  it('uses absolute alpha for absolute orientation samples', () => {
+    expect(headingFromOrientation({
+      alpha: 315,
+      absolute: true,
+      webkitCompassHeading: 0,
+      webkitCompassAccuracy: 12,
+    })).toBe(45);
+  });
+
   it('rejects an uncalibrated WebKit compass', () => {
     expect(headingFromOrientation({
       alpha: 12,

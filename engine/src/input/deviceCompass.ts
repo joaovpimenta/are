@@ -53,6 +53,10 @@ export function headingFromOrientation(
   const webkitHeading = sample.webkitCompassHeading;
   const webkitAccuracy = sample.webkitCompassAccuracy;
 
+  if (sample.absolute === true && typeof sample.alpha === 'number' && Number.isFinite(sample.alpha)) {
+    return normalizeCompassHeading(360 - sample.alpha + screenAngle);
+  }
+
   if (
     typeof webkitHeading === 'number'
     && Number.isFinite(webkitHeading)
@@ -60,10 +64,6 @@ export function headingFromOrientation(
     && webkitAccuracy !== -1
   ) {
     return normalizeCompassHeading(webkitHeading);
-  }
-
-  if (sample.absolute === true && typeof sample.alpha === 'number' && Number.isFinite(sample.alpha)) {
-    return normalizeCompassHeading(360 - sample.alpha + screenAngle);
   }
 
   return null;
