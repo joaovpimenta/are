@@ -1,5 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, PointerEvent } from 'react';
 import { headingFromOrientation, isCompassDirection, isHeadingAligned } from '../../input/deviceCompass';
 import { matchesLockInput, type LockDefinition, type LockValue } from '../../mechanisms/locks';
@@ -251,7 +251,7 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   currentCompassTarget.current = compassTarget;
   chooseCompassDirection.current = choose;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (definition.kind !== 'compass' || typeof window === 'undefined') return;
     const handleOrientation = (rawEvent: Event) => {
       const event = rawEvent as CompassDeviceOrientationEvent;
