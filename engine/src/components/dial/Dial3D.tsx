@@ -17,7 +17,7 @@ import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialRotation, dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   readout: {
@@ -115,6 +115,13 @@ export function Dial3D({
       <PanelScrew position={[-1.96, -1.98, -0.25]} palette={palette} />
       <PanelScrew position={[1.96, -1.98, -0.25]} palette={palette} />
       <StatusLamp position={[1.72, -1.65, -0.24]} color={solved ? palette.success : palette.warning} active={solved} />
+      <PanelInset position={[0, 0, -0.12]} size={[4.02, 4.02, 0.12]} palette={palette} />
+      <AccentRail position={[-1.62, 2.03, 0.06]} length={3.25} palette={palette} />
+      <AccentRail position={[-1.62, -2.03, 0.06]} length={3.25} palette={palette} />
+      <mesh position={[0, 0, -0.03]}>
+        <torusGeometry args={[1.92, 0.045, 16, 64]} />
+        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.32} metalness={0.72} roughness={0.24} />
+      </mesh>
 
       <group
         ref={dialSpace}

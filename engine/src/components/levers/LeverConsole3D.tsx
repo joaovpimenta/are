@@ -8,7 +8,7 @@ import { beginGesture, isTapGesture, moveGesture, type GestureState, type Pointe
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   label: {
@@ -61,6 +61,7 @@ function Lever({ index, label, value, palette, theme, reducedMotion, disabled, o
       <RoundedBox args={[0.76, 1.55, 0.18]} radius={0.08} smoothness={3} position={[0, 0, -0.02]}>
         <meshStandardMaterial color={palette.face} metalness={0.68} roughness={0.34} />
       </RoundedBox>
+      <StatusLamp position={[0, -0.63, 0.16]} color={palette.accent} active={value} scale={0.42} />
       <mesh
         name={`lever-${label}-hit-target`}
         position={[0, 0.35, 0.48]}
@@ -135,6 +136,9 @@ export function LeverConsole3D({ values, labels = ['N', 'E', 'S', 'W'], solution
       <PanelScrew position={[2.3, 1.3, -0.02]} palette={palette} scale={0.8} />
       <PanelScrew position={[-2.3, -1.3, -0.02]} palette={palette} scale={0.8} />
       <PanelScrew position={[2.3, -1.3, -0.02]} palette={palette} scale={0.8} />
+      <PanelInset position={[0, 0, -0.13]} size={[4.72, 2.58, 0.12]} palette={palette} />
+      <AccentRail position={[0, 1.05, 0.08]} length={4.12} palette={palette} />
+      <AccentRail position={[0, -1.05, 0.08]} length={4.12} palette={palette} />
       {values.slice(0, 4).map((value, index) => <Lever key={index} index={index} label={labels[index] ?? 'L' + (index + 1)} value={value} palette={palette} theme={theme} reducedMotion={reducedMotion} disabled={isDisabled} onToggle={onToggle} />)}
       <StatusLamp position={[2.1, 0.95, 0.02]} color={solved ? palette.success : palette.warning} active={solved} scale={0.78} />
       <pointLight position={[0, 0.6, 1.4]} color={solved ? palette.success : palette.accent} intensity={solved ? 0.75 : 0.22} distance={4} />

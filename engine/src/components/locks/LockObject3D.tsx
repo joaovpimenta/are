@@ -5,6 +5,16 @@ import * as stylex from '@stylexjs/stylex';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Group, Mesh } from 'three';
 import {
+  beginGesture,
+  isTapGesture,
+  moveGesture,
+  moveGestureRespectingPageScroll,
+  shouldCaptureAfterMove,
+  type GestureState,
+  type PointerSample,
+} from '../../input/gesture';
+import { capturePointer, releasePointer } from '../../input/pointerCapture';
+import {
   compassDirectionForHeading,
   headingFromOrientation,
   isCompassDirection,
@@ -13,7 +23,7 @@ import {
 import type { LockDefinition } from '../../mechanisms/locks';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 import { Keypad3D } from '../keypad/Keypad3D';
 
 export type LockVisualStatus = 'pending' | 'active' | 'solved' | 'error';
@@ -43,14 +53,20 @@ const styles = stylex.create({
   canvasShell: {
     position: 'relative',
     width: '100%',
-    height: { default: 520, '@media (max-width: 560px)': 390 },
+    height: { default: 540, '@media (max-width: 560px)': 420 },
     overflow: 'hidden',
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: 'color-mix(in srgb, var(--object-accent) 24%, transparent)',
     backgroundColor: 'color-mix(in srgb, var(--object-surface) 96%, black)',
-    backgroundImage: 'radial-gradient(circle at 50% 36%, var(--object-accent-soft), transparent 64%)',
+    backgroundImage: [
+      'radial-gradient(circle at 50% 36%, var(--object-accent-soft), transparent 64%)',
+      'linear-gradient(var(--object-accent-soft) 1px, transparent 1px)',
+      'linear-gradient(90deg, var(--object-accent-soft) 1px, transparent 1px)',
+    ].join(','),
+    backgroundSize: 'auto, 32px 32px, 32px 32px',
+    boxShadow: 'inset 0 0 60px rgba(0,0,0,.28), 0 18px 46px rgba(0,0,0,.22)',
     touchAction: 'pan-y',
   },
   canvas: { touchAction: 'pan-y' },
@@ -133,6 +149,15 @@ function statusColor(status: LockVisualStatus, palette: ThreeTheme) {
   return palette.accent;
 }
 
+function pointerSample(event: ThreeEvent<PointerEvent>): PointerSample {
+  return {
+    pointerId: event.pointerId,
+    pointerType: event.nativeEvent.pointerType,
+    clientX: event.nativeEvent.clientX,
+    clientY: event.nativeEvent.clientY,
+  };
+}
+
 function SceneLighting({ accent }: { accent: string }) {
   return (
     <>
@@ -181,6 +206,8 @@ function DeviceHousing({ children, palette, status, width = 5.8, height = 4.5 }:
       <RoundedBox args={[width - 0.48, height - 0.5, 0.14]} radius={0.14} smoothness={4} position={[0, 0, -0.05]} receiveShadow>
         <meshStandardMaterial color={palette.face} metalness={0.58} roughness={0.38} />
       </RoundedBox>
+      <PanelInset position={[0, 0, -0.13]} size={[width - 0.7, height - 0.72, 0.1]} palette={palette} />
+      <AccentRail position={[-width / 2 + 0.58, height / 2 - 0.38, 0.1]} length={Math.max(1.8, width - 1.16)} palette={palette} />
       <PanelScrew position={[-width / 2 + 0.23, height / 2 - 0.23, 0.02]} palette={palette} scale={0.7} />
       <PanelScrew position={[width / 2 - 0.23, height / 2 - 0.23, 0.02]} palette={palette} scale={0.7} />
       <PanelScrew position={[-width / 2 + 0.23, -height / 2 + 0.23, 0.02]} palette={palette} scale={0.7} />
@@ -225,6 +252,7 @@ function PhysicalButton({
   color, size = [0.72, 0.54, 0.2], labelDistance = 6.6,
 }: PhysicalButtonProps) {
   const mesh = useRef<Mesh>(null);
+  const gesture = useRef<GestureState | null>(null);
   const [pressed, setPressed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const reducedMotion = useContext(ReducedMotionContext);
@@ -247,12 +275,28 @@ function PhysicalButton({
         receiveShadow
         onPointerEnter={(event) => { event.stopPropagation(); if (!disabled) setHovered(true); }}
         onPointerLeave={() => { setHovered(false); setPressed(false); }}
-        onPointerDown={(event) => { event.stopPropagation(); if (!disabled) setPressed(true); }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          if (disabled) return;
+          gesture.current = beginGesture('press', pointerSample(event));
+          setPressed(true);
+        }}
+        onPointerMove={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          const next = moveGesture(current, pointerSample(event));
+          gesture.current = next;
+          if (next.phase === 'cancelled') setPressed(false);
+        }}
         onPointerUp={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
           event.stopPropagation();
           setPressed(false);
-          if (!disabled) onPress();
+          if (!disabled && isTapGesture(current)) onPress();
+          gesture.current = null;
         }}
+        onPointerCancel={() => { setPressed(false); gesture.current = null; }}
       >
         <meshStandardMaterial
           color={hovered ? palette.metalLight : materialColor}
@@ -289,12 +333,12 @@ function SequenceReadout({ sequence, theme, position = [0, 1.55, 0.12] }: {
 
 function PatternLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
   const { palette, theme, sequence, status, onChoose, onSubmit, onClear } = props;
-  const [dragging, setDragging] = useState(false);
+  const gesture = useRef<GestureState | null>(null);
   const points = useMemo(() => Array.from({ length: 9 }, (_, index) => [((index % 3) - 1) * 1.15, (1 - Math.floor(index / 3)) * 0.95, 0.16] as [number, number, number]), []);
   const line = sequence.map((item) => points[Number(item) - 1]).filter(Boolean);
 
   useEffect(() => {
-    const stop = () => setDragging(false);
+    const stop = () => { gesture.current = null; };
     window.addEventListener('pointerup', stop);
     return () => window.removeEventListener('pointerup', stop);
   }, []);
@@ -314,9 +358,43 @@ function PatternLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
           <group key={value} position={position}>
             <mesh
               castShadow
-              onPointerDown={(event) => { event.stopPropagation(); setDragging(true); select(value); }}
-              onPointerEnter={(event) => { event.stopPropagation(); if (dragging) select(value); }}
-              onPointerUp={(event) => { event.stopPropagation(); setDragging(false); }}
+              onPointerDown={(event) => {
+                if (status === 'solved') return;
+                event.stopPropagation();
+                gesture.current = beginGesture('drag', pointerSample(event));
+              }}
+              onPointerEnter={(event) => {
+                const current = gesture.current;
+                if (!current || current.pointerId !== event.pointerId || status === 'solved') return;
+                event.stopPropagation();
+                const next = moveGestureRespectingPageScroll(current, pointerSample(event));
+                gesture.current = next;
+                if (next.phase === 'active') select(value);
+              }}
+              onPointerMove={(event) => {
+                const current = gesture.current;
+                if (!current || current.pointerId !== event.pointerId || status === 'solved') return;
+                const next = moveGestureRespectingPageScroll(current, pointerSample(event));
+                gesture.current = next;
+                if (next.phase === 'cancelled') return;
+                if (shouldCaptureAfterMove(current, next)) capturePointer(event.nativeEvent.target, event.pointerId);
+                if (next.phase === 'active') {
+                  event.stopPropagation();
+                  select(value);
+                }
+              }}
+              onPointerUp={(event) => {
+                const current = gesture.current;
+                if (!current || current.pointerId !== event.pointerId) return;
+                event.stopPropagation();
+                if (current.phase !== 'cancelled' && (current.phase === 'active' || isTapGesture(current))) select(value);
+                releasePointer(event.nativeEvent.target, event.pointerId);
+                gesture.current = null;
+              }}
+              onPointerCancel={(event) => {
+                releasePointer(event.nativeEvent.target, event.pointerId);
+                gesture.current = null;
+              }}
             >
               <sphereGeometry args={[0.23, 28, 28]} />
               <meshStandardMaterial color={active ? palette.accent : palette.metalDark} emissive={palette.accent} emissiveIntensity={active ? 1.2 : 0.06} metalness={0.76} roughness={0.22} />
@@ -585,6 +663,7 @@ function Switch3D({ active, order, position, palette, theme, label, disabled, on
   onToggle: () => void;
 }) {
   const lever = useRef<Group>(null);
+  const gesture = useRef<GestureState | null>(null);
   const reducedMotion = useContext(ReducedMotionContext);
   useFrame((_, delta) => {
     if (!lever.current) return;
@@ -596,7 +675,27 @@ function Switch3D({ active, order, position, palette, theme, label, disabled, on
       <RoundedBox args={[0.65, 0.65, 0.14]} radius={0.06} smoothness={3}>
         <meshStandardMaterial color={palette.metalDark} metalness={0.8} roughness={0.26} />
       </RoundedBox>
-      <group ref={lever} rotation={[0.58, 0, 0]} onPointerDown={(event) => { event.stopPropagation(); if (!disabled) onToggle(); }}>
+      <group
+        ref={lever}
+        rotation={[0.58, 0, 0]}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          if (!disabled) gesture.current = beginGesture('press', pointerSample(event));
+        }}
+        onPointerMove={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          gesture.current = moveGesture(current, pointerSample(event));
+        }}
+        onPointerUp={(event) => {
+          const current = gesture.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          event.stopPropagation();
+          if (!disabled && isTapGesture(current)) onToggle();
+          gesture.current = null;
+        }}
+        onPointerCancel={() => { gesture.current = null; }}
+      >
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.11, 0.14, 0.14, 20]} />
           <meshStandardMaterial color={palette.metal} metalness={0.9} roughness={0.2} />

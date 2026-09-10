@@ -19,14 +19,27 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
           <p {...stylex.props(labStyles.kicker)}>{entry.artifact} · {entry.family}</p>
           <h1 id={'title-' + entry.id} {...stylex.props(labStyles.workbenchTitle)}>{entry.title}</h1>
           <p {...stylex.props(labStyles.description)}>{entry.description}</p>
+          <div {...stylex.props(labStyles.workbenchHeaderMeta)}>
+            <span {...stylex.props(labStyles.workbenchMeta)}>interação diegética</span>
+            <span {...stylex.props(labStyles.workbenchMeta)}>fallback acessível</span>
+          </div>
         </div>
-        <span {...stylex.props(labStyles.statusBadge)} data-status={status}>{status}</span>
+        <span {...stylex.props(
+          labStyles.statusBadge,
+          status === 'solved' ? labStyles.statusBadgeSolved : status === 'error' ? labStyles.statusBadgeError : undefined,
+        )} data-status={status}>{status}</span>
       </header>
 
-      <div {...stylex.props(labStyles.stage)}>{visual}</div>
+      <div {...stylex.props(labStyles.stage)}>
+        <div {...stylex.props(labStyles.stageLead)}>
+          <span {...stylex.props(labStyles.stageLeadLabel)}>Live artifact viewport</span>
+          <span {...stylex.props(labStyles.stageLeadRule)} aria-hidden="true" />
+        </div>
+        {visual}
+      </div>
 
       <section {...stylex.props(labStyles.instructionPanel)}>
-        <div>
+        <div {...stylex.props(labStyles.instructionCopy)}>
           <p {...stylex.props(labStyles.sectionLabel)}>Operação</p>
           <p {...stylex.props(labStyles.instruction)}>{entry.instruction}</p>
         </div>
@@ -35,14 +48,18 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
 
       <div {...stylex.props(labStyles.detailGrid)}>
         <section {...stylex.props(labStyles.detailPanel)}>
-          <p {...stylex.props(labStyles.sectionLabel)}>Solução de teste</p>
+          <div {...stylex.props(labStyles.detailPanelHeader)}>
+            <p {...stylex.props(labStyles.sectionLabel)}>Solução de teste</p>
+          </div>
           <p {...stylex.props(labStyles.solution)}>{entry.solution}</p>
           {telemetry ? <div {...stylex.props(labStyles.telemetry)}>{telemetry}</div> : null}
         </section>
         <section {...stylex.props(labStyles.detailPanel)}>
-          <p {...stylex.props(labStyles.sectionLabel)}>Hint ladder</p>
+          <div {...stylex.props(labStyles.detailPanelHeader)}>
+            <p {...stylex.props(labStyles.sectionLabel)}>Hint ladder</p>
+          </div>
           <ol {...stylex.props(labStyles.hints)}>
-            {entry.hints.map((hint, index) => <li key={hint}><strong>{index + 1}</strong> {hint}</li>)}
+            {entry.hints.map((hint, index) => <li {...stylex.props(labStyles.hintItem)} key={hint}><strong {...stylex.props(labStyles.hintNumber)}>{index + 1}</strong><span>{hint}</span></li>)}
           </ol>
         </section>
       </div>
@@ -50,4 +67,3 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
     </article>
   );
 }
-
