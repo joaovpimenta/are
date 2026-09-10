@@ -49,7 +49,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install browser
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - name: Run all viewport, touch, drag, scroll and raycast scenarios
+      - name: Run functional and responsive interaction coverage
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
@@ -61,16 +61,27 @@ jobs:
             export ARE_VIEWPORT_WIDTH="$2"
             export ARE_VIEWPORT_HEIGHT="$3"
             export ARE_DEVICE_SCALE_FACTOR="$4"
+            suite="$5"
             export ARE_HAS_TOUCH='1'
             export ARE_IS_MOBILE='1'
 
             rm -rf playwright-report test-results interaction-artifacts flaky-tests.txt
-            echo "::group::${ARE_BROWSER} · ${ARE_PROFILE}"
+            echo "::group::${ARE_BROWSER} · ${ARE_PROFILE} · ${suite}"
+
+            if [ "$suite" = full ]; then
+              specs=(tests/e2e/interaction)
+            else
+              specs=(
+                tests/e2e/interaction/hit-targets.spec.ts
+                tests/e2e/interaction/mobile-scroll.spec.ts
+                tests/e2e/interaction/raycast.spec.ts
+              )
+            fi
 
             if [ "$ARE_BROWSER" = firefox ]; then
-              xvfb-run -a pnpm test:interaction --headed
+              xvfb-run -a pnpm exec playwright test "${specs[@]}" --headed
             else
-              pnpm test:interaction
+              pnpm exec playwright test "${specs[@]}"
             fi
             rc=$?
 
@@ -84,18 +95,24 @@ jobs:
             [ ! -d interaction-artifacts ] || cp -R interaction-artifacts "$dest/"
             [ ! -f flaky-tests.txt ] || cp flaky-tests.txt "$dest/"
 
-            echo "::endgroup::"
+            result=PASS
             if [ "$rc" -ne 0 ]; then
+              result=FAIL
               overall=1
             fi
+            echo "| ${ARE_BROWSER} | ${ARE_PROFILE} | ${suite} | ${result} |" >> "$GITHUB_STEP_SUMMARY"
+            echo "::endgroup::"
           }
 
-          run_profile mobile-320x568-dpr1 320 568 1
-          run_profile mobile-360x800-dpr2 360 800 2
-          run_profile mobile-390x844-dpr3 390 844 3
-          run_profile mobile-430x932-dpr3 430 932 3
-          run_profile tablet-portrait-768x1024-dpr2 768 1024 2
-          run_profile tablet-landscape-1024x768-dpr2 1024 768 2
+          echo '| Browser | Profile | Coverage | Result |' >> "$GITHUB_STEP_SUMMARY"
+          echo '| --- | --- | --- | --- |' >> "$GITHUB_STEP_SUMMARY"
+
+          run_profile mobile-320x568-dpr1 320 568 1 responsive
+          run_profile mobile-360x800-dpr2 360 800 2 responsive
+          run_profile mobile-390x844-dpr3 390 844 3 full
+          run_profile mobile-430x932-dpr3 430 932 3 responsive
+          run_profile tablet-portrait-768x1024-dpr2 768 1024 2 responsive
+          run_profile tablet-landscape-1024x768-dpr2 1024 768 2 responsive
 
           exit "$overall"
       - name: Upload grouped browser report and failure evidence
