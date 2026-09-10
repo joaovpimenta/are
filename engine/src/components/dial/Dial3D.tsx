@@ -2,7 +2,7 @@ import { Html, RoundedBox } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Group, Vector3 } from 'three';
 import {
   beginGesture,
@@ -78,6 +78,14 @@ export function Dial3D({
   const palette = toThreeTheme(theme);
   const debugHitTargets = interactionDebugEnabled();
   const canvasHost = useThree(({ gl }) => gl.domElement.parentElement?.parentElement ?? gl.domElement);
+
+  useEffect(() => {
+    const onTouchStart = () => {
+      if (!disabled) pointerBounds.current = canvasHost.getBoundingClientRect();
+    };
+    canvasHost.addEventListener('touchstart', onTouchStart, { passive: true });
+    return () => canvasHost.removeEventListener('touchstart', onTouchStart);
+  }, [canvasHost, disabled]);
 
   useFrame((_, delta) => {
     if (!rotor.current) return;
