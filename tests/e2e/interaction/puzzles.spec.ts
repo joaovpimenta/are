@@ -14,24 +14,24 @@ async function resetSession(page: Page) {
   await tap(page, page.getByRole('button', { name: 'Resetar sessão' }));
 }
 
-async function holdCompassHeading(page: Page, magneticHeading: number) {
-  await page.evaluate(async (heading) => {
-    const dispatch = () => {
-      const screenAngle = window.screen.orientation?.angle ?? 0;
-      const alpha = ((360 + screenAngle - heading) % 360 + 360) % 360;
-      const event = new Event('deviceorientationabsolute');
-      Object.defineProperties(event, {
-        alpha: { value: alpha },
-        absolute: { value: true },
-      });
-      window.dispatchEvent(event);
-    };
-
-    for (let sample = 0; sample < 12; sample += 1) {
-      dispatch();
-      await new Promise((resolve) => window.setTimeout(resolve, 100));
-    }
+async function dispatchCompassHeading(page: Page, magneticHeading: number) {
+  await page.evaluate((heading) => {
+    const screenAngle = window.screen.orientation?.angle ?? 0;
+    const alpha = ((360 + screenAngle - heading) % 360 + 360) % 360;
+    const event = new Event('deviceorientationabsolute');
+    Object.defineProperties(event, {
+      alpha: { value: alpha },
+      absolute: { value: true },
+    });
+    window.dispatchEvent(event);
   }, magneticHeading);
+}
+
+async function holdCompassHeading(page: Page, magneticHeading: number) {
+  for (let sample = 0; sample < 10; sample += 1) {
+    await dispatchCompassHeading(page, magneticHeading);
+    if (sample < 9) await new Promise((resolve) => setTimeout(resolve, 80));
+  }
 }
 
 test('Keypad: initial, invalid, repeated input, resolution, disabled and reset', async ({ page }) => {
@@ -173,6 +173,7 @@ test('Compass lock: device orientation registers eight-way headings without clic
   await section.scrollIntoViewIfNeeded();
   const console = section.getByRole('group', { name: 'Bússola · console operacional' });
   await expect(console.locator('canvas')).toHaveCount(1);
+  await expect(console.getByText(/AGUARDANDO NORTE MAGNÉTICO/)).toBeVisible();
 
   const current = console.getByLabel('Entrada atual');
   await expect(current.locator('span')).toHaveText(['Nenhuma posição selecionada.']);
