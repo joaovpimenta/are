@@ -5,10 +5,11 @@ import * as stylex from '@stylexjs/stylex';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Group, Mesh } from 'three';
 import {
+  EMPTY_COMPASS_HOLD,
   compassDirectionForHeading,
   headingFromOrientation,
   isCompassDirection,
-  isHeadingAligned,
+  updateCompassHold,
 } from '../../input/deviceCompass';
 import type { LockDefinition } from '../../mechanisms/locks';
 import type { AreTheme, ThreeTheme } from '../../theme';
@@ -358,6 +359,10 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
   const { palette, theme, sequence, status, onChoose, onSubmit, onClear } = props;
   const [permission, setPermission] = useState<CompassPermissionState>('checking');
   const [heading, setHeading] = useState<number | null>(null);
+  const holdRef = useRef(EMPTY_COMPASS_HOLD);
+  const targetRef = useRef<string | null>(null);
+  const chooseRef = useRef(onChoose);
+  const statusRef = useRef(status);
   const solution = useMemo(
     () => Array.isArray(props.definition.solution)
       ? props.definition.solution.filter((value): value is string => typeof value === 'string' && isCompassDirection(value))
@@ -365,15 +370,22 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
     [props.definition.solution],
   );
   const nextTarget = solution[sequence.length] ?? null;
-  const alignedTarget = heading !== null && nextTarget && isCompassDirection(nextTarget) && isHeadingAligned(heading, nextTarget, 15)
-    ? nextTarget
-    : null;
   const currentDirection = heading === null ? null : compassDirectionForHeading(heading);
   const needleRotation = heading === null ? 0 : heading * Math.PI / 180;
   const directionPositions: Record<string, [number, number, number]> = {
     N: [0, 1.08, 0.19], NE: [0.78, 0.78, 0.19], E: [1.1, 0, 0.19], SE: [0.78, -0.78, 0.19],
     S: [0, -1.08, 0.19], SO: [-0.78, -0.78, 0.19], O: [-1.1, 0, 0.19], NO: [-0.78, 0.78, 0.19],
   };
+
+  useEffect(() => {
+    chooseRef.current = onChoose;
+    statusRef.current = status;
+  }, [onChoose, status]);
+
+  useEffect(() => {
+    targetRef.current = nextTarget;
+    holdRef.current = EMPTY_COMPASS_HOLD;
+  }, [nextTarget]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -386,7 +398,10 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
   }, []);
 
   useEffect(() => {
-    if (permission !== 'granted' || typeof window === 'undefined') return;
+    if (permission !== 'granted' || typeof window === 'undefined') {
+      holdRef.current = EMPTY_COMPASS_HOLD;
+      return;
+    }
     const handleOrientation = (rawEvent: Event) => {
       const event = rawEvent as CompassDeviceOrientationEvent;
       const screenAngle = window.screen.orientation?.angle ?? 0;
@@ -396,7 +411,21 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
         webkitCompassHeading: event.webkitCompassHeading,
         webkitCompassAccuracy: event.webkitCompassAccuracy,
       }, screenAngle);
-      if (nextHeading !== null) setHeading(nextHeading);
+      if (nextHeading === null) return;
+
+      setHeading(nextHeading);
+      const target = targetRef.current;
+      if (statusRef.current === 'solved' || !target || !isCompassDirection(target)) {
+        holdRef.current = EMPTY_COMPASS_HOLD;
+        return;
+      }
+
+      const update = updateCompassHold(holdRef.current, nextHeading, target, performance.now());
+      holdRef.current = update.state;
+      if (update.confirmed) {
+        holdRef.current = EMPTY_COMPASS_HOLD;
+        chooseRef.current(update.confirmed);
+      }
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation);
@@ -404,14 +433,9 @@ function CompassLock3D(props: LockObject3DProps & { palette: ThreeTheme }) {
     return () => {
       window.removeEventListener('deviceorientationabsolute', handleOrientation);
       window.removeEventListener('deviceorientation', handleOrientation);
+      holdRef.current = EMPTY_COMPASS_HOLD;
     };
   }, [permission]);
-
-  useEffect(() => {
-    if (!alignedTarget || status === 'solved') return;
-    const timer = window.setTimeout(() => onChoose(alignedTarget), 650);
-    return () => window.clearTimeout(timer);
-  }, [alignedTarget, onChoose, status]);
 
   useEffect(() => {
     if (status === 'solved' || solution.length === 0 || sequence.length !== solution.length) return;
