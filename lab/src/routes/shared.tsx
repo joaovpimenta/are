@@ -33,7 +33,8 @@ export function HardwareCanvas({
       aria-label={ariaLabel}
       shadows="percentage"
       camera={{ position: [0, 0.12, cameraZ], fov: 38 }}
-      dpr={[1, 1.5]}
+      // Keep touch-first routes responsive on high-density mobile displays.
+      dpr={[1, 1.25]}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
     >
       <SceneLighting />
