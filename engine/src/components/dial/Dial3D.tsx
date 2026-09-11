@@ -78,14 +78,7 @@ export function Dial3D({
   const palette = toThreeTheme(theme);
   const debugHitTargets = interactionDebugEnabled();
   const canvasHost = useThree(({ gl }) => gl.domElement.parentElement?.parentElement ?? gl.domElement);
-
-  useEffect(() => {
-    const onTouchStart = () => {
-      if (!disabled) pointerBounds.current = canvasHost.getBoundingClientRect();
-    };
-    canvasHost.addEventListener('touchstart', onTouchStart, { passive: true });
-    return () => canvasHost.removeEventListener('touchstart', onTouchStart);
-  }, [canvasHost, disabled]);
+  const canvasSize = useThree(({ size }) => size);
 
   useFrame((_, delta) => {
     if (!rotor.current) return;
@@ -106,12 +99,29 @@ export function Dial3D({
   const readLocalPoint = (point: Vector3) => {
     if (!disabled) onChange(dialValueFromClockPoint(point.x, point.y, { min, max }));
   };
-  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3, bounds = pointerBounds.current ?? canvasHost.getBoundingClientRect()) => {
+  const boundsForElement = (element: Element): CanvasBounds => {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      top: rect.top,
+      width: canvasSize.width > 0 ? canvasSize.width : rect.width,
+      height: canvasSize.height > 0 ? canvasSize.height : rect.height,
+    };
+  };
+  useEffect(() => {
+    const onTouchStart = () => {
+      if (!disabled) pointerBounds.current = boundsForElement(canvasHost);
+    };
+    canvasHost.addEventListener('touchstart', onTouchStart, { passive: true });
+    return () => canvasHost.removeEventListener('touchstart', onTouchStart);
+  }, [canvasHost, canvasSize.height, canvasSize.width, disabled]);
+
+  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3, bounds = pointerBounds.current ?? boundsForElement(canvasHost)) => {
     recordPointerDebug(pointerSample(event), bounds, event.object.name || 'dial', local);
   };
   const eventSourceBounds = (event: ThreeEvent<PointerEvent>): CanvasBounds => {
     const source = event.nativeEvent.currentTarget;
-    return source instanceof Element ? source.getBoundingClientRect() : canvasHost.getBoundingClientRect();
+    return source instanceof Element ? boundsForElement(source) : boundsForElement(canvasHost);
   };
 
   return (
