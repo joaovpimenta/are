@@ -19,6 +19,7 @@ import {
   headingFromOrientation,
   isCompassDirection,
 } from '../../input/deviceCompass';
+import { getCanvasQuality } from '../../core/canvasQuality';
 import type { LockDefinition } from '../../mechanisms/locks';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
@@ -856,6 +857,7 @@ export function LockObject3D(props: LockObject3DProps) {
   const host = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [webGlAvailable, setWebGlAvailable] = useState<boolean | null>(null);
+  const quality = getCanvasQuality();
 
   useEffect(() => {
     const element = host.current;
@@ -876,10 +878,10 @@ export function LockObject3D(props: LockObject3DProps) {
           {...stylex.props(styles.canvas)}
           aria-label={`${props.definition.kind}: objeto Three.js interativo`}
           fallback={<div {...stylex.props(styles.loading)}>WebGL indisponível. Use os controles alternativos acessíveis abaixo.</div>}
-          shadows
-          frameloop="always"
+          shadows="percentage"
+          frameloop={quality.frameloop}
           camera={{ position: [0, 0.12, props.definition.kind === 'musical' ? 8.6 : 7.7], fov: 38 }}
-          dpr={[1, 1.45]}
+          dpr={quality.dpr}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
         >
           <ResponsiveCamera musical={props.definition.kind === 'musical'} />
