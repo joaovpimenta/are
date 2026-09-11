@@ -31,7 +31,7 @@ export function HardwareCanvas({
   return (
     <Canvas
       aria-label={ariaLabel}
-      shadows
+      shadows="percentage"
       camera={{ position: [0, 0.12, cameraZ], fov: 38 }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
