@@ -78,7 +78,6 @@ export function Dial3D({
   const palette = toThreeTheme(theme);
   const debugHitTargets = interactionDebugEnabled();
   const canvasHost = useThree(({ gl }) => gl.domElement.parentElement?.parentElement ?? gl.domElement);
-  const canvasSize = useThree(({ size }) => size);
 
   useFrame((_, delta) => {
     if (!rotor.current) return;
@@ -104,8 +103,8 @@ export function Dial3D({
     return {
       left: rect.left,
       top: rect.top,
-      width: canvasSize.width > 0 ? canvasSize.width : rect.width,
-      height: canvasSize.height > 0 ? canvasSize.height : rect.height,
+      width: rect.width,
+      height: rect.height,
     };
   };
   useEffect(() => {
@@ -114,7 +113,7 @@ export function Dial3D({
     };
     canvasHost.addEventListener('touchstart', onTouchStart, { passive: true });
     return () => canvasHost.removeEventListener('touchstart', onTouchStart);
-  }, [canvasHost, canvasSize.height, canvasSize.width, disabled]);
+  }, [canvasHost, disabled]);
 
   const debug = (event: ThreeEvent<PointerEvent>, local: Vector3, bounds = pointerBounds.current ?? boundsForElement(canvasHost)) => {
     recordPointerDebug(pointerSample(event), bounds, event.object.name || 'dial', local);
