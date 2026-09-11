@@ -1,8 +1,8 @@
 import { Html, RoundedBox } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Group, Vector3 } from 'three';
 import {
   beginGesture,
@@ -12,12 +12,13 @@ import {
   type GestureState,
   type PointerSample,
 } from '../../input/gesture';
+import type { CanvasBounds } from '../../input/coordinates';
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialRotation, dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   readout: {
@@ -69,12 +70,14 @@ export function Dial3D({
   const dialSpace = useRef<Group>(null);
   const rotor = useRef<Group>(null);
   const gesture = useRef<GestureState | null>(null);
+  const pointerBounds = useRef<CanvasBounds | null>(null);
   const [hovered, setHovered] = useState(false);
   const solved = value === target;
   const range = max - min + 1;
   const targetRotation = dialRotation(value, { min, max });
   const palette = toThreeTheme(theme);
   const debugHitTargets = interactionDebugEnabled();
+  const canvasHost = useThree(({ gl }) => gl.domElement.parentElement?.parentElement ?? gl.domElement);
 
   useFrame((_, delta) => {
     if (!rotor.current) return;
@@ -95,10 +98,29 @@ export function Dial3D({
   const readLocalPoint = (point: Vector3) => {
     if (!disabled) onChange(dialValueFromClockPoint(point.x, point.y, { min, max }));
   };
-  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3) => {
-    const target = event.nativeEvent.target;
-    if (!(target instanceof Element)) return;
-    recordPointerDebug(pointerSample(event), target.getBoundingClientRect(), event.object.name || 'dial', local);
+  const boundsForElement = (element: Element): CanvasBounds => {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  };
+  useEffect(() => {
+    const onTouchStart = () => {
+      if (!disabled) pointerBounds.current = boundsForElement(canvasHost);
+    };
+    canvasHost.addEventListener('touchstart', onTouchStart, { passive: true });
+    return () => canvasHost.removeEventListener('touchstart', onTouchStart);
+  }, [canvasHost, disabled]);
+
+  const debug = (event: ThreeEvent<PointerEvent>, local: Vector3, bounds = pointerBounds.current ?? boundsForElement(canvasHost)) => {
+    recordPointerDebug(pointerSample(event), bounds, event.object.name || 'dial', local);
+  };
+  const eventSourceBounds = (event: ThreeEvent<PointerEvent>): CanvasBounds => {
+    const source = event.nativeEvent.currentTarget;
+    return source instanceof Element ? boundsForElement(source) : boundsForElement(canvasHost);
   };
 
   return (
@@ -115,11 +137,19 @@ export function Dial3D({
       <PanelScrew position={[-1.96, -1.98, -0.25]} palette={palette} />
       <PanelScrew position={[1.96, -1.98, -0.25]} palette={palette} />
       <StatusLamp position={[1.72, -1.65, -0.24]} color={solved ? palette.success : palette.warning} active={solved} />
+      <PanelInset position={[0, 0, -0.12]} size={[4.02, 4.02, 0.12]} palette={palette} />
+      <AccentRail position={[-1.62, 2.03, 0.06]} length={3.25} palette={palette} />
+      <AccentRail position={[-1.62, -2.03, 0.06]} length={3.25} palette={palette} />
+      <mesh position={[0, 0, -0.03]}>
+        <torusGeometry args={[1.92, 0.045, 16, 64]} />
+        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.32} metalness={0.72} roughness={0.24} />
+      </mesh>
 
       <group
         ref={dialSpace}
         onPointerEnter={(event) => {
           event.stopPropagation();
+          if (!disabled && pointerBounds.current === null) pointerBounds.current = eventSourceBounds(event);
           if (!disabled) setHovered(true);
         }}
         onPointerLeave={() => setHovered(false)}
@@ -127,7 +157,8 @@ export function Dial3D({
           if (disabled) return;
           event.stopPropagation();
           gesture.current = beginGesture('rotate', pointerSample(event));
-          debug(event, localPoint(event.point));
+          pointerBounds.current ??= eventSourceBounds(event);
+          debug(event, localPoint(event.point), pointerBounds.current);
         }}
         onPointerMove={(event) => {
           const current = gesture.current;
@@ -157,13 +188,16 @@ export function Dial3D({
           debug(event, local);
           releasePointer(event.nativeEvent.target, event.pointerId);
           gesture.current = null;
+          pointerBounds.current = null;
         }}
         onPointerCancel={(event) => {
           releasePointer(event.nativeEvent.target, event.pointerId);
           gesture.current = null;
+          pointerBounds.current = null;
         }}
         onLostPointerCapture={() => {
           gesture.current = null;
+          pointerBounds.current = null;
         }}
         onWheel={(event) => {
           if (disabled) return;

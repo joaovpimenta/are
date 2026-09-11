@@ -8,7 +8,7 @@ import { beginGesture, isTapGesture, moveGesture, type GestureState, type Pointe
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   keyLabel: {
@@ -182,11 +182,11 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, red
       <PanelScrew position={[-1.53, -1.95, 0.02]} palette={palette} scale={0.8} />
       <PanelScrew position={[1.53, -1.95, 0.02]} palette={palette} scale={0.8} />
       <StatusLamp position={[1.35, 1.5, 0.06]} color={accent} active={status !== 'idle'} scale={0.72} />
+      <PanelInset position={[0, -0.25, 0.01]} size={[3.2, 3.1, 0.1]} palette={palette} />
+      <PanelInset position={[0, 1.5, 0.02]} size={[2.68, 0.62, 0.12]} palette={palette} accent />
+      <AccentRail position={[-1.55, -0.2, 0.12]} length={3.18} palette={palette} vertical />
+      <AccentRail position={[1.55, -0.2, 0.12]} length={3.18} palette={palette} vertical />
 
-      <mesh position={[0, 1.5, 0.05]}>
-        <boxGeometry args={[2.65, 0.58, 0.16]} />
-        <meshStandardMaterial color={palette.face} emissive={accent} emissiveIntensity={status === 'idle' ? 0.08 : 0.25} />
-      </mesh>
       <Html transform center position={[0, 1.5, 0.15]} distanceFactor={5.6}>
         <div {...stylex.props(styles.display)} style={toObjectThemeStyle(theme)}>{value.padEnd(4, '·')}</div>
       </Html>

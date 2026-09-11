@@ -50,7 +50,9 @@ export const createKeypadMachine = (solution = '1984') => setup({
       },
     },
     error: {
-      after: { 650: { target: 'idle', actions: 'clear' } },
+      // Keep the rejection visible long enough for both the animation and
+      // assistive status announcement to be perceived before resetting.
+      after: { 900: { target: 'idle', actions: 'clear' } },
       on: { RESET: { target: 'idle', actions: 'clear' } },
     },
     solved: {

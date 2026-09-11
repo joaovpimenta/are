@@ -52,7 +52,11 @@ export function App() {
   const navigate = (nextRoute: LabRouteId, href: string) => {
     window.history.pushState({}, '', href);
     setRoute(nextRoute);
-    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    try {
+      window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    } catch {
+      window.scrollTo(0, 0);
+    }
   };
 
   const reset = () => {
