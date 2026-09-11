@@ -652,6 +652,7 @@ export const labStyles = stylex.create({
   stage: {
     position: 'relative',
     display: 'grid',
+    gridTemplateRows: 'auto minmax(0, 1fr)',
     placeItems: 'stretch',
     minHeight: {
       default: 430,
