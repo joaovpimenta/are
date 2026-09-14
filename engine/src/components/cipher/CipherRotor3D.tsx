@@ -6,7 +6,7 @@ import { beginGesture, isTapGesture, moveGesture, type GestureState, type Pointe
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   readout: {
@@ -65,6 +65,10 @@ function Rotor({ index, value, palette, theme, disabled, onStep }: RotorProps) {
   return (
     <group position={[x, -0.05, 0.04]}>
       <RoundedBox args={[0.92, 1.95, 0.32]} radius={0.1} smoothness={4}><meshStandardMaterial color={palette.face} metalness={0.72} roughness={0.25} /></RoundedBox>
+      <mesh position={[0, 0, 0.18]}>
+        <torusGeometry args={[0.34, 0.032, 12, 32]} />
+        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.22} metalness={0.72} roughness={0.24} />
+      </mesh>
       <mesh name={`cipher-${index + 1}-increase-hit-target`} position={[0, 0.72, 0.31]} {...handlers(1)}>
         <boxGeometry args={[0.62, 0.5, 0.28]} />
         <meshBasicMaterial color={palette.accent} transparent opacity={debugHitTargets ? 0.16 : 0} depthWrite={false} />
@@ -101,6 +105,9 @@ export function CipherRotor3D({ values, solution, theme, disabled = false, onSte
       <PanelScrew position={[2.04, 1.35, -0.02]} palette={palette} scale={0.8} />
       <PanelScrew position={[-2.04, -1.35, -0.02]} palette={palette} scale={0.8} />
       <PanelScrew position={[2.04, -1.35, -0.02]} palette={palette} scale={0.8} />
+      <PanelInset position={[0, -0.05, -0.14]} size={[3.92, 2.52, 0.12]} palette={palette} />
+      <AccentRail position={[-2.04, 0, 0.08]} length={2.18} palette={palette} vertical />
+      <AccentRail position={[2.04, 0, 0.08]} length={2.18} palette={palette} vertical />
       {values.slice(0, 3).map((value, index) => <Rotor key={index} index={index} value={value} palette={palette} theme={theme} disabled={isDisabled} onStep={onStep} />)}
       <StatusLamp position={[1.82, 1.02, 0.02]} color={solved ? palette.success : palette.warning} active={solved} scale={0.78} />
       <pointLight position={[0, 0.5, 1.3]} color={solved ? palette.success : palette.accent} intensity={solved ? 0.78 : 0.25} distance={4} />

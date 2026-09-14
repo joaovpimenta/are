@@ -17,7 +17,7 @@ import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
-import { PanelScrew, StatusLamp } from '../hardware/HardwareParts';
+import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
   legend: {
@@ -107,6 +107,10 @@ export function Tuner3D({
       <PanelScrew position={[2.24, 1.27, -0.04]} palette={palette} scale={0.8} />
       <PanelScrew position={[-2.24, -1.27, -0.04]} palette={palette} scale={0.8} />
       <PanelScrew position={[2.24, -1.27, -0.04]} palette={palette} scale={0.8} />
+      <PanelInset position={[0, 0, -0.15]} size={[4.58, 2.5, 0.14]} palette={palette} />
+      <PanelInset position={[-0.35, 0.66, 0.01]} size={[3.62, 0.84, 0.1]} palette={palette} accent />
+      <AccentRail position={[-2.08, -0.18, 0.08]} length={1.18} palette={palette} vertical />
+      <AccentRail position={[-2.08, 1.1, 0.08]} length={0.48} palette={palette} />
 
       <RoundedBox args={[3.55, 0.82, 0.14]} radius={0.08} smoothness={4} position={[-0.35, 0.66, 0]}>
         <meshStandardMaterial color={palette.face} emissive={palette.accent} emissiveIntensity={0.06} />
@@ -172,6 +176,14 @@ export function Tuner3D({
           <cylinderGeometry args={[0.9, 0.9, 0.24, 40]} />
           <meshBasicMaterial color={palette.accent} transparent opacity={debugHitTargets ? 0.18 : 0} depthWrite={false} />
         </mesh>
+        <mesh position={[0, 0, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.96, 1, 0.12, 48]} />
+          <meshStandardMaterial color={palette.metalDark} metalness={0.86} roughness={0.24} />
+        </mesh>
+        <mesh position={[0, 0, 0.03]}>
+          <torusGeometry args={[0.91, 0.045, 14, 48]} />
+          <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.3} metalness={0.7} roughness={0.24} />
+        </mesh>
         <group ref={rotor}>
           <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.72, 0.8, 0.55, 48]} />
@@ -181,6 +193,10 @@ export function Tuner3D({
             const angle = index * (Math.PI * 2 / 20);
             return <mesh key={index} position={[Math.sin(angle) * 0.68, Math.cos(angle) * 0.68, 0.29]} rotation={[0, 0, -angle]}><boxGeometry args={[0.035, 0.15, 0.035]} /><meshStandardMaterial color={palette.metalDark} /></mesh>;
           })}
+          <mesh position={[0, 0, 0.32]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.16, 0.19, 0.12, 28]} />
+            <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.28} metalness={0.82} roughness={0.18} />
+          </mesh>
         </group>
       </group>
 

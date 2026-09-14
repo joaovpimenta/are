@@ -30,7 +30,7 @@ canvas {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     width: 100% !important;
-    overflow-x: visible !important;
+    overflow-x: hidden !important;
   }
   nav[aria-label="Mecanismos do Lab"] > a {
     min-width: 0 !important;

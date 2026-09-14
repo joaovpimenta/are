@@ -1,5 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import type { ReactNode } from 'react';
+import { getCanvasQuality } from '@are/engine/core/canvasQuality';
 
 function SceneReady() {
   useFrame(({ gl }) => {
@@ -28,12 +29,15 @@ export function HardwareCanvas({
   cameraZ?: number;
   ariaLabel: string;
 }) {
+  const quality = getCanvasQuality();
+
   return (
     <Canvas
       aria-label={ariaLabel}
-      shadows
+      shadows="percentage"
+      frameloop={quality.frameloop}
       camera={{ position: [0, 0.12, cameraZ], fov: 38 }}
-      dpr={[1, 1.5]}
+      dpr={quality.dpr}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
     >
       <SceneLighting />

@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, PointerEvent } from 'react';
+import { headingFromOrientation, isCompassDirection, isHeadingAligned } from '../../input/deviceCompass';
 import { matchesLockInput, type LockDefinition, type LockValue } from '../../mechanisms/locks';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle } from '../../theme';
@@ -144,6 +145,13 @@ const noteFrequencies: Record<string, number> = {
   'Dó4': 261.63, 'Ré4': 293.66, 'Mi4': 329.63, 'Fá4': 349.23, 'Sol4': 392, 'Lá4': 440, 'Si4': 493.88,
 };
 
+type CompassDeviceOrientationEvent = Event & {
+  alpha: number | null;
+  absolute: boolean;
+  webkitCompassHeading?: number;
+  webkitCompassAccuracy?: number;
+};
+
 function playNote(note: string) {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext;
@@ -190,6 +198,10 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   const [tracingPattern, setTracingPattern] = useState(false);
   const [status, setStatus] = useState<LockStatus>('pending');
   const [message, setMessage] = useState('Aguardando entrada.');
+  const compassRegistration = useRef<string | null>(null);
+  const currentStatus = useRef<LockStatus>('pending');
+  const currentCompassTarget = useRef<string | undefined>(undefined);
+  const chooseCompassDirection = useRef<(value: string) => void>(() => undefined);
   const variables = toObjectThemeStyle(theme);
   const options = useMemo(() => definition.options ?? defaultOptions[definition.kind] ?? [], [definition]);
   const columns = definition.columns ?? (definition.kind === 'pattern' ? 3 : definition.kind === 'grid-5x5' ? 5 : 4);
@@ -197,6 +209,7 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
 
   const clear = () => {
     setText(''); setSecondaryText(''); setSequence([]); setCoordinates(''); setTracingPattern(false); setStatus('pending');
+    compassRegistration.current = null;
     setMessage('Aguardando entrada.');
   };
 
@@ -226,6 +239,52 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
     if (definition.kind === 'musical') playNote(value);
     setSequence((current) => [...current, value]);
   };
+
+  const compassSolution = useMemo(
+    () => definition.kind === 'compass' && Array.isArray(definition.solution)
+      ? definition.solution.filter((value): value is string => typeof value === 'string' && isCompassDirection(value))
+      : [],
+    [definition],
+  );
+  const compassTarget = compassSolution[sequence.length];
+  currentStatus.current = status;
+  currentCompassTarget.current = compassTarget;
+  chooseCompassDirection.current = choose;
+
+  useLayoutEffect(() => {
+    if (definition.kind !== 'compass' || typeof window === 'undefined') return;
+    const handleOrientation = (rawEvent: Event) => {
+      const event = rawEvent as CompassDeviceOrientationEvent;
+      const isNativeOrientationEvent = typeof window.DeviceOrientationEvent === 'function'
+        && rawEvent instanceof window.DeviceOrientationEvent;
+      const nextHeading = headingFromOrientation({
+        alpha: event.alpha,
+        absolute: event.absolute,
+        eventType: rawEvent.type,
+        webkitCompassHeading: event.webkitCompassHeading,
+        webkitCompassAccuracy: event.webkitCompassAccuracy,
+      }, isNativeOrientationEvent ? window.screen.orientation?.angle ?? 0 : 0);
+      if (nextHeading === null) return;
+      const target = currentCompassTarget.current;
+      if (
+        currentStatus.current !== 'solved'
+        && target
+        && isCompassDirection(target)
+        && isHeadingAligned(nextHeading, target, 15)
+        && compassRegistration.current !== target
+      ) {
+        compassRegistration.current = target;
+        chooseCompassDirection.current(target);
+      }
+    };
+
+    window.addEventListener('deviceorientationabsolute', handleOrientation);
+    window.addEventListener('deviceorientation', handleOrientation);
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation);
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, [definition.kind]);
 
   const inputValue = (): LockValue => {
     if (definition.kind === 'login') return `${text}:${secondaryText}`;
