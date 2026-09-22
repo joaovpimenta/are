@@ -19,6 +19,9 @@ async function tapCanvas(page: Page, xRatio: number, yRatio: number) {
   expect(box).not.toBeNull();
   const x = box!.x + box!.width * xRatio;
   const y = box!.y + box!.height * yRatio;
+  expect(await canvas.evaluate((element, point) =>
+    document.elementFromPoint(point.x, point.y) === element.querySelector('canvas'), { x, y }),
+  'The raycast sample must reach the canvas, not an overlapping toolbar').toBe(true);
   await page.touchscreen.tap(x, y);
   return { box: box!, x, y };
 }

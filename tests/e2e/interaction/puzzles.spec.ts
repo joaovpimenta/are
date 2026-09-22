@@ -14,6 +14,24 @@ async function resetSession(page: Page) {
   await tap(page, page.getByRole('button', { name: 'Resetar sessão' }));
 }
 
+async function holdCompassHeading(page: Page, magneticHeading: number) {
+  await page.evaluate(async (heading) => {
+    const dispatch = () => {
+      const event = new Event('deviceorientationabsolute');
+      Object.defineProperties(event, {
+        alpha: { value: (360 - heading) % 360 },
+        absolute: { value: true },
+      });
+      window.dispatchEvent(event);
+    };
+
+    for (let sample = 0; sample < 9; sample += 1) {
+      dispatch();
+      await new Promise((resolve) => window.setTimeout(resolve, 100));
+    }
+  }, magneticHeading);
+}
+
 test('Keypad: initial, invalid, repeated input, resolution, disabled and reset', async ({ page }) => {
   await page.goto('/lab/keypad/');
   const key = (label: string) => page.getByRole('button', { name: label, exact: true });
@@ -156,15 +174,7 @@ test('Compass lock: device orientation registers eight-way headings without clic
   await expect(console.getByLabel('Entrada atual')).toContainText('Nenhuma posição selecionada.');
 
   for (const heading of [0, 45, 90, 135]) {
-    await page.evaluate((magneticHeading) => {
-      const event = new Event('deviceorientationabsolute');
-      Object.defineProperties(event, {
-        alpha: { value: (360 - magneticHeading) % 360 },
-        absolute: { value: true },
-      });
-      window.dispatchEvent(event);
-    }, heading);
-    await page.waitForTimeout(720);
+    await holdCompassHeading(page, heading);
   }
 
   const current = console.getByLabel('Entrada atual');
