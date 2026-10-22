@@ -10,17 +10,40 @@ async function dialCanvas(page: Page) {
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   });
   await expect(canvas).toBeVisible();
+  // On short tablet viewports the canvas can be taller than the viewport. Its
+  // visible center is the anchor; individual samples are checked separately.
+  await expect.poll(async () => canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    return rect.width > 0 && rect.height > 0
+      && x >= 0 && x < window.innerWidth && y >= 0 && y < window.innerHeight
+      && Boolean(hit && (hit === element || element.contains(hit)));
+  })).toBe(true);
   return canvas;
 }
 
 async function tapCanvas(page: Page, xRatio: number, yRatio: number) {
   const canvas = await dialCanvas(page);
-  const box = await canvas.boundingBox();
-  expect(box).not.toBeNull();
-  const x = box!.x + box!.width * xRatio;
-  const y = box!.y + box!.height * yRatio;
+  await expect.poll(() => canvas.evaluate((element, ratios) => {
+    const rect = element.getBoundingClientRect();
+    const x = rect.left + rect.width * ratios.x;
+    const y = rect.top + rect.height * ratios.y;
+    const hit = document.elementFromPoint(x, y);
+    return x >= 0 && x < window.innerWidth && y >= 0 && y < window.innerHeight
+      && Boolean(hit && (hit === element || element.contains(hit)));
+  }, { x: xRatio, y: yRatio })).toBe(true);
+  const box = await canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  expect(box.width).toBeGreaterThan(0);
+  expect(box.height).toBeGreaterThan(0);
+  const x = box.x + box.width * xRatio;
+  const y = box.y + box.height * yRatio;
   await page.touchscreen.tap(x, y);
-  return { box: box!, x, y };
+  return { box, x, y };
 }
 
 test('Dial raycasting reports canvas-relative NDC and local quadrants after page offset/scroll', async ({ page }) => {
@@ -76,15 +99,22 @@ test('Dial survives resize/orientation change and keeps using the resized canvas
 test('Dial crosses the 0/360 seam in both directions', async ({ page }) => {
   await page.goto('/lab/dial/');
   const canvas = await dialCanvas(page);
-  const box = await canvas.boundingBox();
-  expect(box).not.toBeNull();
-  const radius = Math.min(box!.width, box!.height) * 0.1;
-  const centerX = box!.x + box!.width / 2;
-  const centerY = box!.y + box!.height / 2 + radius * 0.12;
+  const box = await canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  const radius = Math.min(box.width, box.height) * 0.1;
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2 + radius * 0.12;
   const y = centerY - radius;
   const seamOffset = radius * 0.75;
   const output = page.locator('output').first();
 
+  await expect.poll(() => page.evaluate(({ x, y }) => {
+    const hit = document.elementFromPoint(x, y);
+    return x >= 0 && x < window.innerWidth && y >= 0 && y < window.innerHeight
+      && hit?.tagName === 'CANVAS';
+  }, { x: centerX + seamOffset, y })).toBe(true);
   await page.touchscreen.tap(centerX + seamOffset, y);
   await expect(output).toHaveText('01');
 
@@ -95,11 +125,13 @@ test('Dial crosses the 0/360 seam in both directions', async ({ page }) => {
 test('Dial supports clockwise/counter-clockwise drag, pointerup outside, cancel and lost capture recovery', async ({ page }) => {
   await page.goto('/lab/dial/');
   const canvas = await dialCanvas(page);
-  const box = await canvas.boundingBox();
-  expect(box).not.toBeNull();
-  const radius = Math.min(box!.width, box!.height) * 0.1;
-  const cx = box!.x + box!.width / 2;
-  const cy = box!.y + box!.height / 2 + radius * 0.12;
+  const box = await canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  const radius = Math.min(box.width, box.height) * 0.1;
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2 + radius * 0.12;
 
   await page.mouse.move(cx, cy - radius);
   await page.mouse.down();

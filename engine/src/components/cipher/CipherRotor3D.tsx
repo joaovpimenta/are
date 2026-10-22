@@ -13,7 +13,7 @@ const styles = stylex.create({
     display: 'grid', placeItems: 'center', width: 48, height: 56, borderWidth: 1, borderStyle: 'solid',
     borderColor: 'color-mix(in srgb, var(--object-accent) 28%, transparent)', borderRadius: 8,
     color: 'var(--object-accent)', backgroundColor: 'color-mix(in srgb, var(--object-surface) 90%, black)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 24, fontWeight: 950,
+    fontFamily: 'var(--object-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)', fontSize: 24, fontWeight: 950,
     pointerEvents: 'none', userSelect: 'none', textShadow: '0 0 16px var(--object-accent)',
   },
 });

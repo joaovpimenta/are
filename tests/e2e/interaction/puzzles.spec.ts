@@ -14,6 +14,34 @@ async function resetSession(page: Page) {
   await tap(page, page.getByRole('button', { name: 'Resetar sessão' }));
 }
 
+async function holdCompassHeadingUntilRegistered(page: Page, heading: number, current: Locator, index: number, direction: string) {
+  await page.evaluate((magneticHeading) => {
+    const target = window as Window & { __areCompassPump?: number };
+    const emit = () => {
+      const event = new Event('deviceorientationabsolute');
+      Object.defineProperties(event, {
+        alpha: { value: (360 - magneticHeading) % 360 },
+        absolute: { value: true },
+      });
+      window.dispatchEvent(event);
+    };
+    emit();
+    target.__areCompassPump = window.setInterval(emit, 50);
+  }, heading);
+
+  try {
+    const registered = current.locator('span');
+    await expect(registered).toHaveCount(index + 1);
+    await expect(registered.nth(index)).toHaveText(direction);
+  } finally {
+    await page.evaluate(() => {
+      const target = window as Window & { __areCompassPump?: number };
+      if (target.__areCompassPump !== undefined) window.clearInterval(target.__areCompassPump);
+      delete target.__areCompassPump;
+    });
+  }
+}
+
 test('Keypad: initial, invalid, repeated input, resolution, disabled and reset', async ({ page }) => {
   await page.goto('/lab/keypad/');
   const key = (label: string) => page.getByRole('button', { name: label, exact: true });
@@ -119,9 +147,16 @@ test('Cipher Rotor: invalid step, complete solution, disabled, navigation return
   await tap(page, plus(1));
   await expect(rotor(1)).toHaveText('1');
   await expect(mechanismStatus(page, 'active')).toBeVisible();
-  for (let step = 0; step < 6; step += 1) await tap(page, plus(1));
-  for (let step = 0; step < 3; step += 1) await tap(page, plus(2));
+  for (let value = 2; value <= 7; value += 1) {
+    await tap(page, plus(1));
+    await expect(rotor(1)).toHaveText(String(value));
+  }
+  for (let value = 1; value <= 3; value += 1) {
+    await tap(page, plus(2));
+    await expect(rotor(2)).toHaveText(String(value));
+  }
   await tap(page, plus(3));
+  await expect(rotor(3)).toHaveText('1');
   await expect(page.getByText('rotors=731')).toBeVisible();
   await expect(mechanismStatus(page, 'solved')).toBeVisible();
   for (const index of [1, 2, 3]) {
@@ -155,22 +190,10 @@ test('Compass lock: device orientation registers eight-way headings without clic
   await expect(console.locator('canvas')).toHaveCount(1);
   await expect(console.getByLabel('Entrada atual')).toContainText('Nenhuma posição selecionada.');
 
-  for (const heading of [0, 45, 90, 135]) {
-    await page.evaluate((magneticHeading) => {
-      const event = new Event('deviceorientationabsolute');
-      Object.defineProperties(event, {
-        alpha: { value: (360 - magneticHeading) % 360 },
-        absolute: { value: true },
-      });
-      window.dispatchEvent(event);
-    }, heading);
-    await page.waitForTimeout(720);
+  const current = console.getByLabel('Entrada atual');
+  for (const [index, heading] of [0, 45, 90, 135].entries()) {
+    await holdCompassHeadingUntilRegistered(page, heading, current, index, ['N', 'NE', 'E', 'SE'][index]);
   }
 
-  const current = console.getByLabel('Entrada atual');
-  await expect(current).toContainText('N');
-  await expect(current).toContainText('NE');
-  await expect(current).toContainText('E');
-  await expect(current).toContainText('SE');
   await expect(console.getByRole('status')).toHaveText('Cadeado aberto. Solução confirmada.');
 });

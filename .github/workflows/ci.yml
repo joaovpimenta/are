@@ -117,7 +117,7 @@ jobs:
 
   interaction-tests:
     name: interaction-tests
-    needs: build
+    needs: [build, typecheck, unit-tests]
     uses: ./.github/workflows/interaction-tests.yml
     with:
       artifact-name: site-build-candidate
@@ -127,7 +127,7 @@ jobs:
 
   smoke-tests:
     name: smoke-tests
-    needs: build
+    needs: [build, typecheck, unit-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -149,10 +149,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Typecheck before browser tests
-        run: pnpm typecheck
-      - name: Run mechanism/input unit tests before browser tests
-        run: pnpm exec vitest run engine/src/mechanisms engine/src/input
       - name: Download candidate build
         uses: actions/download-artifact@v4
         with:

@@ -25,7 +25,7 @@ const styles = stylex.create({
     gap: 2,
     minWidth: 116,
     color: 'var(--object-text)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'var(--object-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
     textAlign: 'center',
     pointerEvents: 'none',
     userSelect: 'none',

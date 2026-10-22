@@ -20,6 +20,8 @@ type LockPanelProps = {
 
 type LockStatus = LockVisualStatus;
 
+const COMPASS_ALIGNMENT_DWELL_MS = 650;
+
 const focusRing = {
   outlineWidth: 3,
   outlineStyle: 'solid',
@@ -47,7 +49,7 @@ const styles = stylex.create({
     backgroundColor: 'var(--object-surface-raised)', color: 'var(--object-text)', fontSize: 16, fontWeight: 800,
     ':focus-visible': focusRing,
   },
-  inputCode: { textAlign: 'center', letterSpacing: 8, fontFamily: 'ui-monospace, monospace', fontSize: 22 },
+  inputCode: { textAlign: 'center', letterSpacing: 8, fontFamily: 'var(--object-font-mono, ui-monospace, monospace)', fontSize: 22 },
   grid: { display: 'grid', gap: 8 },
   grid3: { gridTemplateColumns: 'repeat(3, minmax(52px, 1fr))' },
   grid4: { gridTemplateColumns: 'repeat(4, minmax(44px, 1fr))' },
@@ -96,7 +98,7 @@ const styles = stylex.create({
     borderRadius: '50%', borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--object-accent)',
     transform: 'translate(-50%, -50%)', boxShadow: '0 0 20px var(--object-accent)', pointerEvents: 'none',
   },
-  coordinates: { margin: 0, color: 'var(--object-muted)', fontFamily: 'ui-monospace, monospace', fontSize: 12 },
+  coordinates: { margin: 0, color: 'var(--object-muted)', fontFamily: 'var(--object-font-mono, ui-monospace, monospace)', fontSize: 12 },
   controls: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   submit: {
     minHeight: 44, paddingInline: 16, borderRadius: 999, borderWidth: 0,
@@ -198,18 +200,32 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   const [tracingPattern, setTracingPattern] = useState(false);
   const [status, setStatus] = useState<LockStatus>('pending');
   const [message, setMessage] = useState('Aguardando entrada.');
-  const compassRegistration = useRef<string | null>(null);
+  const compassRegistration = useRef<number | null>(null);
   const currentStatus = useRef<LockStatus>('pending');
   const currentCompassTarget = useRef<string | undefined>(undefined);
+  const currentCompassStep = useRef(0);
+  const compassDwell = useRef<{
+    step: number;
+    target: string;
+    timer: number;
+  } | null>(null);
   const chooseCompassDirection = useRef<(value: string) => void>(() => undefined);
   const variables = toObjectThemeStyle(theme);
   const options = useMemo(() => definition.options ?? defaultOptions[definition.kind] ?? [], [definition]);
   const columns = definition.columns ?? (definition.kind === 'pattern' ? 3 : definition.kind === 'grid-5x5' ? 5 : 4);
   const isGeolocation = definition.kind === 'virtual-geolocation' || definition.kind === 'real-geolocation';
 
+  const clearCompassDwell = () => {
+    const dwell = compassDwell.current;
+    if (!dwell || typeof window === 'undefined') return;
+    window.clearTimeout(dwell.timer);
+    compassDwell.current = null;
+  };
+
   const clear = () => {
     setText(''); setSecondaryText(''); setSequence([]); setCoordinates(''); setTracingPattern(false); setStatus('pending');
     compassRegistration.current = null;
+    clearCompassDwell();
     setMessage('Aguardando entrada.');
   };
 
@@ -249,7 +265,15 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
   const compassTarget = compassSolution[sequence.length];
   currentStatus.current = status;
   currentCompassTarget.current = compassTarget;
+  currentCompassStep.current = sequence.length;
   chooseCompassDirection.current = choose;
+
+  useLayoutEffect(() => {
+    const dwell = compassDwell.current;
+    if (dwell && (dwell.step !== sequence.length || dwell.target !== compassTarget)) {
+      clearCompassDwell();
+    }
+  }, [compassTarget, sequence.length]);
 
   useLayoutEffect(() => {
     if (definition.kind !== 'compass' || typeof window === 'undefined') return;
@@ -264,25 +288,60 @@ export function LockPanel({ definition, theme, title, resetKey = 0, reducedMotio
         webkitCompassHeading: event.webkitCompassHeading,
         webkitCompassAccuracy: event.webkitCompassAccuracy,
       }, isNativeOrientationEvent ? window.screen.orientation?.angle ?? 0 : 0);
-      if (nextHeading === null) return;
       const target = currentCompassTarget.current;
+      const step = currentCompassStep.current;
       if (
-        currentStatus.current !== 'solved'
-        && target
-        && isCompassDirection(target)
-        && isHeadingAligned(nextHeading, target, 15)
-        && compassRegistration.current !== target
+        nextHeading === null
+        || currentStatus.current === 'solved'
+        || !target
+        || !isCompassDirection(target)
+        || !isHeadingAligned(nextHeading, target, 15)
+        || compassRegistration.current === step
       ) {
-        compassRegistration.current = target;
-        chooseCompassDirection.current(target);
+        clearCompassDwell();
+        return;
       }
+
+      const dwell = compassDwell.current;
+      if (!dwell || dwell.step !== step || dwell.target !== target) {
+        clearCompassDwell();
+        const nextDwell = {
+          step,
+          target,
+          timer: 0,
+        };
+        nextDwell.timer = window.setTimeout(() => {
+          if (compassDwell.current !== nextDwell) return;
+          compassDwell.current = null;
+          if (
+            currentStatus.current !== 'solved'
+            && currentCompassStep.current === step
+            && currentCompassTarget.current === target
+          ) {
+            // The same heading can legitimately appear more than once; each
+            // sequence position gets its own uninterrupted dwell.
+            compassRegistration.current = step;
+            chooseCompassDirection.current(target);
+          }
+        }, COMPASS_ALIGNMENT_DWELL_MS);
+        // Sensor event cadence varies by browser; the hold uses the latest
+        // aligned reading until a later reading moves outside the target.
+        compassDwell.current = nextDwell;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') clearCompassDwell();
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation);
     window.addEventListener('deviceorientation', handleOrientation);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
+      clearCompassDwell();
       window.removeEventListener('deviceorientationabsolute', handleOrientation);
       window.removeEventListener('deviceorientation', handleOrientation);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [definition.kind]);
 
