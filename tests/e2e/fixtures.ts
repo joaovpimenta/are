@@ -10,7 +10,10 @@ test.beforeEach(async ({ page }) => {
   const errors: string[] = [];
   failures.set(page, errors);
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(`console.error: ${message.text()}`);
+    if (message.type() === 'error') {
+      const source = message.location().url;
+      errors.push(`console.error: ${message.text()}${source ? ` (${source})` : ''}`);
+    }
   });
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   page.on('response', (response) => {
