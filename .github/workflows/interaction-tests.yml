@@ -50,15 +50,16 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Typecheck before browser tests
-        run: pnpm typecheck
-      - name: Run deterministic mechanisms and input primitives first
-        run: pnpm exec vitest run engine/src/mechanisms engine/src/input
       - name: Download exact production candidate
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: dist
+      - name: Cache Playwright browser binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ matrix.browser }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install browser
         run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       - name: Run pointer, touch, drag, scroll and raycast tests

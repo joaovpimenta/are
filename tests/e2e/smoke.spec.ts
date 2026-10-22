@@ -22,6 +22,39 @@ test('Lab exposes all mechanisms as direct routes', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Aumentar rotor 1' })).toBeEnabled();
 });
 
+test('Lab theme selection is accessible and survives mechanism navigation', async ({ page }) => {
+  await page.goto('/lab/keypad/');
+
+  const theme = page.getByRole('combobox', { name: 'Tema do Lab' });
+  await expect(theme).toHaveValue('cyan');
+  const cyanAccent = await page.locator('main').evaluate((element) => getComputedStyle(element).getPropertyValue('--are-accent').trim());
+  await theme.selectOption('stranger-things');
+  await expect(theme).toHaveValue('stranger-things');
+  await expect.poll(() => page.locator('main').evaluate((element) => getComputedStyle(element).getPropertyValue('--are-accent').trim()))
+    .not.toBe(cyanAccent);
+
+  await page.getByRole('link', { name: /Signal tuner/ }).first().click();
+  await expect(page.getByRole('heading', { name: 'Signal tuner' })).toBeVisible();
+  await expect(theme).toHaveValue('stranger-things');
+});
+
+test('short landscape Lab pages scroll past the top toolbar', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto('/lab/dial/');
+
+  const topbar = page.locator('header').first();
+  await expect(topbar).toBeVisible();
+  await expect.poll(() => topbar.evaluate((element) => getComputedStyle(element).position)).toBe('static');
+
+  await page.evaluate(() => window.scrollBy({ top: 480, behavior: 'auto' }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await expect.poll(() => topbar.evaluate((element) => element.getBoundingClientRect().bottom)).toBeLessThan(0);
+
+  await page.getByRole('button', { name: 'Aumentar dial' }).scrollIntoViewIfNeeded();
+  await page.getByRole('button', { name: 'Aumentar dial' }).click();
+  await expect(page.locator('article output').first()).toHaveText('03');
+});
+
 test('Lock archive separates and operates all 14 examples', async ({ page }) => {
   await page.goto('/lab/locks/');
 

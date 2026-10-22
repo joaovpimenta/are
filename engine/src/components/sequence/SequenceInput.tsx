@@ -35,6 +35,7 @@ const styles = stylex.create({
   },
   hint: {
     color: 'var(--object-muted)',
+    fontFamily: 'var(--object-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
     fontSize: 11,
     fontWeight: 600,
   },
@@ -137,7 +138,7 @@ export function SequenceInput({ symbols, solution, theme, resetKey = 0, onChange
             type="button"
             aria-label={`Símbolo ${symbol}, posição ${index + 1}`}
             aria-pressed={state.selection.includes(index)}
-            disabled={state.status === 'solved'}
+            disabled={state.status === 'solved' || state.status === 'error'}
             onClick={() => choose(index)}
           >
             {symbol}

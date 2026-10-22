@@ -78,7 +78,7 @@ const styles = stylex.create({
     minWidth: 122, padding: '7px 11px', borderRadius: 7,
     color: 'var(--object-text)', backgroundColor: 'color-mix(in srgb, var(--object-surface) 92%, black)',
     borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--object-accent) 25%, transparent)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 10, fontWeight: 900,
+    fontFamily: 'var(--object-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)', fontSize: 10, fontWeight: 900,
     letterSpacing: 1.2, textAlign: 'center', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none',
     boxShadow: '0 0 22px color-mix(in srgb, var(--object-accent) 12%, transparent)',
   },
@@ -87,11 +87,11 @@ const styles = stylex.create({
   plateWide: { minWidth: 252 },
   buttonLabel: {
     minWidth: 36, display: 'grid', placeItems: 'center', color: 'var(--object-text)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 10, fontWeight: 950,
+    fontFamily: 'var(--object-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)', fontSize: 10, fontWeight: 950,
     lineHeight: 1, textAlign: 'center', pointerEvents: 'none', userSelect: 'none', textShadow: '0 0 10px var(--object-accent)',
   },
   tinyLabel: {
-    color: 'var(--object-muted)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    color: 'var(--object-muted)', fontFamily: 'var(--object-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
     fontSize: 8, fontWeight: 900, letterSpacing: 0.5, pointerEvents: 'none', userSelect: 'none',
   },
   terminal: {
@@ -104,14 +104,14 @@ const styles = stylex.create({
   terminalInput: {
     width: '100%', minHeight: 34, paddingInline: 8, borderRadius: 5, borderWidth: 1, borderStyle: 'solid',
     borderColor: 'color-mix(in srgb, var(--object-accent) 28%, transparent)', backgroundColor: 'var(--object-surface-raised)',
-    color: 'var(--object-text)', fontFamily: 'ui-monospace, monospace', fontSize: 12, fontWeight: 800,
+    color: 'var(--object-text)', fontFamily: 'var(--object-font-mono, ui-monospace, monospace)', fontSize: 12, fontWeight: 800,
     ':focus-visible': { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--object-accent)', outlineOffset: 2 },
   },
   readout: {
     width: 220, minHeight: 48, display: 'grid', placeItems: 'center', padding: 8, borderRadius: 6,
     color: 'var(--object-accent)', backgroundColor: 'color-mix(in srgb, var(--object-surface) 94%, black)',
     borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--object-accent) 25%, transparent)',
-    fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 850, textAlign: 'center',
+    fontFamily: 'var(--object-font-mono, ui-monospace, monospace)', fontSize: 10, fontWeight: 850, textAlign: 'center',
     pointerEvents: 'none', userSelect: 'none', overflowWrap: 'anywhere',
   },
 });

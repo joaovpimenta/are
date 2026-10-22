@@ -7,6 +7,9 @@ const height = Number(process.env.ARE_VIEWPORT_HEIGHT ?? 720);
 const dpr = Number(process.env.ARE_DEVICE_SCALE_FACTOR ?? 1);
 const hasTouch = process.env.ARE_HAS_TOUCH === '1';
 const mobileRequested = process.env.ARE_IS_MOBILE === '1';
+const localChromiumPath = !process.env.CI && browser === 'chromium' && process.env.ARE_CHROMIUM_EXECUTABLE_PATH
+  ? process.env.ARE_CHROMIUM_EXECUTABLE_PATH
+  : undefined;
 const reportDir = 'playwright-report';
 
 export default defineConfig({
@@ -28,6 +31,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     browserName: browser,
+    ...(localChromiumPath ? { launchOptions: { executablePath: localChromiumPath } } : {}),
     viewport: { width, height },
     deviceScaleFactor: dpr,
     hasTouch,
