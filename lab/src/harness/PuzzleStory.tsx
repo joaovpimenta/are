@@ -138,6 +138,7 @@ export function PuzzleGuide({
         <RevealClue
           resetKey={resetKey}
           title="Pista 1 · Observe"
+          buttonLabel="Revelar pista 1"
           teaser="Primeiro indício, sem revelar a resposta."
           content={story.hints[0]}
           theme={theme}
@@ -147,6 +148,7 @@ export function PuzzleGuide({
           <RevealClue
             resetKey={resetKey}
             title="Pista 2 · Relacione"
+            buttonLabel="Revelar pista 2"
             teaser="Uma orientação adicional sobre a evidência."
             content={story.hints[1]}
             theme={theme}
@@ -157,6 +159,7 @@ export function PuzzleGuide({
           <RevealClue
             resetKey={resetKey}
             title="Pista 3 · Direção final"
+            buttonLabel="Revelar pista 3"
             teaser="Última dica antes da solução completa."
             content={story.hints[2]}
             theme={theme}
@@ -166,6 +169,7 @@ export function PuzzleGuide({
       <RevealClue
         resetKey={resetKey}
         title="Resposta final · Como resolver"
+        buttonLabel="Mostrar solução completa"
         teaser="Mostrar a combinação exata e o passo a passo completo, sem executar o puzzle automaticamente."
         content={['RESPOSTA: ' + story.solution, '', ...story.steps.map((step, index) => (index + 1) + '. ' + step)].join('\n')}
         theme={theme}
