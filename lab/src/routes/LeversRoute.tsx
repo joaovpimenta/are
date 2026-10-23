@@ -21,7 +21,7 @@ export function LeversRoute({ entry, theme, reducedMotion, resetVersion, session
     session.send({ type: matchesSwitchSolution(next, solution) ? 'MECHANISM_SOLVED' : 'MECHANISM_ACTIVE', mechanismId: 'levers' });
   };
   return (
-    <MechanismPage entry={entry} status={solved ? 'solved' : 'active'}
+    <MechanismPage theme={theme} resetKey={resetVersion} entry={entry} status={solved ? 'solved' : 'active'}
       visual={<HardwareCanvas ariaLabel="Distribuidor de energia 3D" cameraZ={7.8}><LeverConsole3D values={values} labels={labels} solution={solution} theme={theme} reducedMotion={reducedMotion} disabled={solved} onToggle={toggle} /></HardwareCanvas>}
       controls={<>{values.map((value, index) => <button {...stylex.props(labStyles.controlButton)} key={labels[index]} type="button" disabled={solved} aria-pressed={value} aria-label={'Alavanca ' + labels[index] + ': ' + (value ? 'ligada' : 'desligada')} onClick={() => toggle(index)}>{labels[index]} {value ? 'ON' : 'OFF'}</button>)}</>}
       telemetry={<span>energia={values.map(Number).join(',')} · target=1,0,1,0</span>} />

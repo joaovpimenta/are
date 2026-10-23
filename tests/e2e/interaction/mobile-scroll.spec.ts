@@ -59,15 +59,15 @@ test('Locks page remains one vertical scroll and distant Three canvases actually
 
   const first = sections.first();
   const last = sections.last();
-  await first.scrollIntoViewIfNeeded();
+  await first.locator('[data-three-lock]').scrollIntoViewIfNeeded();
   await expect(first.locator('canvas')).toHaveCount(1);
 
   for (let cycle = 0; cycle < 2; cycle += 1) {
-    await last.scrollIntoViewIfNeeded();
+    await last.locator('[data-three-lock]').scrollIntoViewIfNeeded();
     await expect(last.locator('canvas')).toHaveCount(1);
     await expect(first.locator('canvas')).toHaveCount(0);
 
-    await first.scrollIntoViewIfNeeded();
+    await first.locator('[data-three-lock]').scrollIntoViewIfNeeded();
     await expect(first.locator('canvas')).toHaveCount(1);
     await expect(last.locator('canvas')).toHaveCount(0);
   }

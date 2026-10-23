@@ -9,6 +9,7 @@ type RevealClueProps = {
   content: string;
   theme: AreTheme;
   resetKey?: number;
+  buttonLabel?: string;
   onReveal?: () => void;
 };
 
@@ -66,10 +67,11 @@ const styles = stylex.create({
     backgroundColor: 'var(--object-accent-soft)',
     fontSize: 13,
     lineHeight: 1.55,
+    whiteSpace: 'pre-wrap',
   },
 });
 
-export function RevealClue({ title, teaser, content, theme, resetKey = 0, onReveal }: RevealClueProps) {
+export function RevealClue({ title, teaser, content, theme, resetKey = 0, buttonLabel = 'Revelar pista', onReveal }: RevealClueProps) {
   const [revealed, setRevealed] = useState(false);
   const variables = toObjectThemeStyle(theme);
 
@@ -90,7 +92,7 @@ export function RevealClue({ title, teaser, content, theme, resetKey = 0, onReve
         <p {...stylex.props(styles.content)} aria-live="polite">{content}</p>
       ) : (
         <button {...stylex.props(styles.button)} type="button" onClick={reveal} aria-expanded={revealed}>
-          Revelar pista
+          {buttonLabel}
         </button>
       )}
     </section>

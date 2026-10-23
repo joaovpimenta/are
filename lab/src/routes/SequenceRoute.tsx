@@ -10,7 +10,7 @@ const solution = [1, 4, 0, 3] as const;
 export function SequenceRoute({ entry, theme, resetVersion, session, snapshot }: LabRouteProps) {
   const status = snapshot.mechanismResults.sequence ?? 'pending';
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={status}
       visual={<div {...stylex.props(labStyles.domStage)}><SequenceInput resetKey={resetVersion} symbols={symbols} solution={solution} theme={theme} onChange={() => session.send({ type: 'MECHANISM_ACTIVE', mechanismId: 'sequence' })} onSolved={() => session.send({ type: 'MECHANISM_SOLVED', mechanismId: 'sequence' })} onError={() => session.send({ type: 'MECHANISM_ERROR', mechanismId: 'sequence' })} /></div>}

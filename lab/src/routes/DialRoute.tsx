@@ -26,7 +26,7 @@ export function DialRoute({ entry, theme, reducedMotion, resetVersion, session }
   const step = (direction: number) => { if (!solved) setValue((current) => stepDialValue(current, direction, { min: 0, max: 9 })); };
 
   return (
-    <MechanismPage entry={entry} status={solved ? 'solved' : 'active'}
+    <MechanismPage theme={theme} resetKey={resetVersion} entry={entry} status={solved ? 'solved' : 'active'}
       visual={<HardwareCanvas ariaLabel="Seletor de cofre 3D"><Dial3D value={value} target={7} theme={theme} reducedMotion={reducedMotion} disabled={solved} onChange={setValue} /></HardwareCanvas>}
       controls={<><button {...stylex.props(labStyles.controlButton)} type="button" disabled={solved} aria-label="Diminuir dial" onClick={() => step(-1)}>−</button><output {...stylex.props(labStyles.controlReadout)} aria-live="polite">{String(value).padStart(2, '0')}</output><button {...stylex.props(labStyles.controlButton)} type="button" disabled={solved} aria-label="Aumentar dial" onClick={() => step(1)}>+</button></>}
       telemetry={<span>ângulo={Math.round(value * 36)}° · target=07</span>} />

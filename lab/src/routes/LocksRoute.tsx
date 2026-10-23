@@ -5,6 +5,8 @@ import { MechanismPage } from '../harness/MechanismPage';
 import type { LabRouteProps } from '../model';
 import { labStyles } from '../styles';
 import { LOCK_PRESETS } from './lockPresets';
+import { LOCK_STORIES } from '../narrative';
+import { PuzzleBrief, PuzzleGuide } from '../harness/PuzzleStory';
 
 const styles = stylex.create({
   stage: {
@@ -286,6 +288,8 @@ export function LocksRoute({ entry, theme, reducedMotion, resetVersion, session,
   return (
     <MechanismPage
       entry={entry}
+      theme={theme}
+      resetKey={resetVersion}
       status={complete ? 'solved' : status}
       visual={
         <div {...stylex.props(labStyles.domStage, styles.stage)}>
@@ -294,7 +298,7 @@ export function LocksRoute({ entry, theme, reducedMotion, resetVersion, session,
               <p {...stylex.props(styles.archiveKicker)}>Crack &amp; Reveal · arquivo de testes</p>
               <h2 {...stylex.props(styles.archiveTitle)}>14 mecanismos, 14 blocos operacionais.</h2>
             </div>
-            <p {...stylex.props(styles.archiveText)}>Cada puzzle conserva sua origem, instrução, solução e console no mesmo bloco. Use o índice para comparar padrões sem perder o contexto do artefato.</p>
+            <p {...stylex.props(styles.archiveText)}>Cada puzzle possui uma história, evidência, regra própria e console funcional. A resposta só aparece ao revelar a ajuda. Use o índice para comparar padrões sem perder o contexto do artefato.</p>
           </div>
           <nav {...stylex.props(styles.index)} aria-label="Índice dos 14 cadeados">
             {LOCK_PRESETS.map((preset, index) => (
@@ -333,9 +337,11 @@ export function LocksRoute({ entry, theme, reducedMotion, resetVersion, session,
                   <span {...stylex.props(styles.state, solved.has(preset.definition.id) ? styles.stateSolved : undefined)}>{solved.has(preset.definition.id) ? 'solved' : 'pending'}</span>
                 </header>
 
+                <PuzzleBrief story={LOCK_STORIES[preset.definition.id]} number={index + 1} />
+
                 <div {...stylex.props(styles.operation)}>
                   <div {...stylex.props(styles.note)}><span {...stylex.props(styles.noteLabel)}>Como testar</span><p {...stylex.props(styles.noteText)}>{preset.instruction}</p></div>
-                  <div {...stylex.props(styles.note)}><span {...stylex.props(styles.noteLabel)}>Solução de teste</span><p {...stylex.props(styles.noteText)}>{preset.solutionLabel}</p></div>
+                  <div {...stylex.props(styles.note)}><span {...stylex.props(styles.noteLabel)}>Como jogar</span><p {...stylex.props(styles.noteText)}>Explore o objeto 3D e use os controles acessíveis. Após inserir a resposta, pressione Validar.</p></div>
                 </div>
 
                 <LockPanel
@@ -348,6 +354,7 @@ export function LocksRoute({ entry, theme, reducedMotion, resetVersion, session,
                   onSolved={() => solve(preset.definition.id)}
                   onError={() => session.send({ type: 'MECHANISM_ERROR', mechanismId: 'locks' })}
                 />
+                <PuzzleGuide story={LOCK_STORIES[preset.definition.id]} theme={theme} resetKey={resetVersion} />
               </section>
             ))}
           </div>

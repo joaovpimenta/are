@@ -11,7 +11,7 @@ const artifacts = [
   { id: 'blueprint', label: 'Planta dobrada', description: 'Mostra quatro símbolos e dois eixos.', symbol: '▧' },
 ] as const;
 
-export function InventoryRoute({ entry, theme, session, snapshot }: LabRouteProps) {
+export function InventoryRoute({ entry, theme, session, snapshot, resetVersion }: LabRouteProps) {
   const items = useMemo(() => artifacts.map((artifact) => ({
     ...artifact,
     collected: snapshot.inventory.includes(artifact.id),
@@ -25,7 +25,7 @@ export function InventoryRoute({ entry, theme, session, snapshot }: LabRouteProp
 
   const status = snapshot.mechanismResults.inventory ?? 'pending';
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={status}
       visual={<div {...stylex.props(labStyles.domStage)}><InventoryPanel items={items} selectedId={snapshot.selectedArtifactId} theme={theme} onSelect={(item) => { session.send({ type: 'ARTIFACT_COLLECTED', artifactId: item.id }); session.send({ type: 'ARTIFACT_SELECTED', artifactId: item.id }); }} /></div>}

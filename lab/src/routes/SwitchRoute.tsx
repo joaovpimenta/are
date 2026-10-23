@@ -9,7 +9,7 @@ const solution = [true, false, true, false] as const;
 export function SwitchRoute({ entry, theme, resetVersion, session, snapshot }: LabRouteProps) {
   const status = snapshot.mechanismResults.switches ?? 'pending';
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={status}
       visual={<div {...stylex.props(labStyles.domStage)}><SwitchGroup resetKey={resetVersion} labels={['NORTE', 'LESTE', 'SUL', 'OESTE']} solution={solution} theme={theme} onChange={() => session.send({ type: 'MECHANISM_ACTIVE', mechanismId: 'switches' })} onSolved={() => session.send({ type: 'MECHANISM_SOLVED', mechanismId: 'switches' })} /></div>}

@@ -12,7 +12,7 @@ const lines = [
 export function DialogueRoute({ entry, theme, resetVersion, session, snapshot }: LabRouteProps) {
   const status = snapshot.mechanismResults.dialogue ?? 'pending';
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={status}
       visual={<div {...stylex.props(labStyles.domStage)}><DialoguePanel key={resetVersion} lines={lines} theme={theme} onComplete={() => session.send({ type: 'MECHANISM_SOLVED', mechanismId: 'dialogue' })} /></div>}

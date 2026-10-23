@@ -19,7 +19,7 @@ export function CipherRoute({ entry, theme, resetVersion, session }: LabRoutePro
     session.send({ type: next.solved ? 'MECHANISM_SOLVED' : 'MECHANISM_ACTIVE', mechanismId: 'cipher' });
   };
   return (
-    <MechanismPage entry={entry} status={cipher.solved ? 'solved' : 'active'}
+    <MechanismPage theme={theme} resetKey={resetVersion} entry={entry} status={cipher.solved ? 'solved' : 'active'}
       visual={<HardwareCanvas ariaLabel="Decodificador de cilindros 3D" cameraZ={7.7}><CipherRotor3D values={cipher.values} solution={solution} theme={theme} disabled={cipher.solved} onStep={step} /></HardwareCanvas>}
       controls={<div {...stylex.props(labStyles.rotorControls)}>{cipher.values.map((value, index) => <div {...stylex.props(labStyles.rotorColumn)} key={index}><button {...stylex.props(labStyles.controlButton)} type="button" disabled={cipher.solved} aria-label={'Aumentar rotor ' + (index + 1)} onClick={() => step(index, 1)}>+</button><output {...stylex.props(labStyles.controlReadout)} aria-label={'Rotor ' + (index + 1)}>{value}</output><button {...stylex.props(labStyles.controlButton)} type="button" disabled={cipher.solved} aria-label={'Diminuir rotor ' + (index + 1)} onClick={() => step(index, -1)}>−</button></div>)}</div>}
       telemetry={<span>rotors={cipher.values.join('')} · target=731</span>} />

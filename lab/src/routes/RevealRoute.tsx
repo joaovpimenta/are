@@ -7,7 +7,7 @@ import { labStyles } from '../styles';
 export function RevealRoute({ entry, theme, resetVersion, session, snapshot }: LabRouteProps) {
   const status = snapshot.mechanismResults.reveal ?? 'pending';
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={status}
       visual={<div {...stylex.props(labStyles.domStage)}><RevealClue resetKey={resetVersion} title="Arquivo ECHO 07" teaser="A telemetria está coberta por uma camada de ruído magnético." content="FREQUÊNCIA 73 · ROTORES 731 · ENERGIA N/S" theme={theme} onReveal={() => session.send({ type: 'MECHANISM_SOLVED', mechanismId: 'reveal' })} /></div>}
