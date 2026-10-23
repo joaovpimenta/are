@@ -4,11 +4,11 @@ import { MechanismPage } from '../harness/MechanismPage';
 import type { LabRouteProps } from '../model';
 import { labStyles } from '../styles';
 
-export function FeedbackRoute({ entry, theme, session, snapshot }: LabRouteProps) {
+export function FeedbackRoute({ entry, theme, session, snapshot, resetVersion }: LabRouteProps) {
   const errors = Object.values(snapshot.mechanismResults).filter((status) => status === 'error').length;
   const status = snapshot.completed ? 'success' : errors > 0 ? 'error' : 'idle';
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={snapshot.completed ? 'solved' : 'pending'}
       visual={<div {...stylex.props(labStyles.domStage)}><FeedbackPanel status={status} theme={theme} title={snapshot.completed ? 'Estação sincronizada' : undefined} message={snapshot.completed ? 'Todos os mecanismos obrigatórios confirmaram a abertura do arquivo central.' : undefined} onReset={() => session.reset()} /></div>}
