@@ -1,5 +1,9 @@
 import * as stylex from '@stylexjs/stylex';
 import type { ReactNode } from 'react';
+import { defaultTheme } from '@are/engine/theme';
+import type { AreTheme } from '@are/engine/theme';
+import { LAB_STORIES } from '../narrative';
+import { PuzzleBrief, PuzzleGuide } from './PuzzleStory';
 import type { LabEntry } from '../model';
 import { labStyles } from '../styles';
 
@@ -9,9 +13,11 @@ type MechanismPageProps = {
   visual: ReactNode;
   controls?: ReactNode;
   telemetry?: ReactNode;
+  theme?: AreTheme;
+  resetKey?: number;
 };
 
-export function MechanismPage({ entry, status, visual, controls, telemetry }: MechanismPageProps) {
+export function MechanismPage({ entry, status, visual, controls, telemetry, theme = defaultTheme, resetKey = 0 }: MechanismPageProps) {
   return (
     <article {...stylex.props(labStyles.workbench)} aria-labelledby={'title-' + entry.id}>
       <header {...stylex.props(labStyles.workbenchHeader)}>
@@ -30,6 +36,8 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
         )} data-status={status}>{status}</span>
       </header>
 
+      <PuzzleBrief story={LAB_STORIES[entry.id]} />
+
       <div {...stylex.props(labStyles.stage)}>
         <div {...stylex.props(labStyles.stageLead)}>
           <span {...stylex.props(labStyles.stageLeadLabel)}>Live artifact viewport</span>
@@ -46,23 +54,13 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
         {controls ? <div {...stylex.props(labStyles.controls)}>{controls}</div> : null}
       </section>
 
-      <div {...stylex.props(labStyles.detailGrid)}>
-        <section {...stylex.props(labStyles.detailPanel)}>
-          <div {...stylex.props(labStyles.detailPanelHeader)}>
-            <p {...stylex.props(labStyles.sectionLabel)}>Solução de teste</p>
-          </div>
-          <p {...stylex.props(labStyles.solution)}>{entry.solution}</p>
-          {telemetry ? <div {...stylex.props(labStyles.telemetry)}>{telemetry}</div> : null}
-        </section>
-        <section {...stylex.props(labStyles.detailPanel)}>
-          <div {...stylex.props(labStyles.detailPanelHeader)}>
-            <p {...stylex.props(labStyles.sectionLabel)}>Hint ladder</p>
-          </div>
-          <ol {...stylex.props(labStyles.hints)}>
-            {entry.hints.map((hint, index) => <li {...stylex.props(labStyles.hintItem)} key={hint}><strong {...stylex.props(labStyles.hintNumber)}>{index + 1}</strong><span>{hint}</span></li>)}
-          </ol>
-        </section>
-      </div>
+      <PuzzleGuide story={LAB_STORIES[entry.id]} theme={theme} resetKey={resetKey} />
+      {telemetry ? (
+        <details {...stylex.props(labStyles.detailPanel)}>
+          <summary>Diagnóstico técnico (Lab)</summary>
+          <div {...stylex.props(labStyles.telemetry)}>{telemetry}</div>
+        </details>
+      ) : null}
       <p {...stylex.props(labStyles.accessibility)}><strong>Acessibilidade:</strong> {entry.accessibility}</p>
     </article>
   );
