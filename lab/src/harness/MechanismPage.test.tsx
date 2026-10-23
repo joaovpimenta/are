@@ -33,7 +33,7 @@ describe('MechanismPage', () => {
     expect(screen.getByRole('button', { name: 'Fallback control' })).toBeEnabled();
     expect(screen.queryByText('RESPOSTA: ' + story.solution, { exact: false })).not.toBeInTheDocument();
     const answerPanel = screen.getByText('Resposta final · Como resolver').closest('section')!;
-    fireEvent.click(within(answerPanel).getByRole('button', { name: 'Revelar pista' }));
+    fireEvent.click(within(answerPanel).getByRole('button', { name: 'Mostrar solução completa' }));
     expect(within(answerPanel).getByText('RESPOSTA: ' + story.solution, { exact: false })).toBeVisible();
     expect(screen.getByText(/Acessibilidade:/)).toBeVisible();
   });
