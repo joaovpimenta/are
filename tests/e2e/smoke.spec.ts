@@ -31,12 +31,14 @@ test('Lock archive separates and operates all 14 examples', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Geoloc. real', exact: true })).toBeAttached();
 
   await expect(page.locator('[data-three-lock]')).toHaveCount(14);
+  // Story briefings may place the lazily-mounted canvas below the viewport.
+  await page.locator('#lock-numeric [data-three-lock]').scrollIntoViewIfNeeded();
   const numericCanvas = page.locator('#lock-numeric canvas');
   await expect(numericCanvas).toHaveCount(1);
   expect(await numericCanvas.evaluate((element) => Boolean((element as HTMLCanvasElement).getContext('webgl2')))).toBe(true);
 
   const finalSection = page.locator('#lock-real-geolocation');
-  await finalSection.scrollIntoViewIfNeeded();
+  await finalSection.locator('[data-three-lock]').scrollIntoViewIfNeeded();
   await expect(finalSection.locator('canvas')).toHaveCount(1);
 
   await page.locator('#lock-numeric').scrollIntoViewIfNeeded();
