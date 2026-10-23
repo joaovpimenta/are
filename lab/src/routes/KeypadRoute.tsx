@@ -41,7 +41,7 @@ export function KeypadRoute({ entry, theme, reducedMotion, resetVersion, session
   };
 
   return (
-    <MechanismPage
+    <MechanismPage theme={theme} resetKey={resetVersion}
       entry={entry}
       status={status}
       visual={<HardwareCanvas ariaLabel="Painel de acesso 3D"><Keypad3D value={keypad.context.value} status={status} theme={theme} reducedMotion={reducedMotion} onDigit={(digit) => send({ type: 'PRESS', digit })} onClear={() => send({ type: 'CLEAR' })} onSubmit={() => send({ type: 'SUBMIT' })} /></HardwareCanvas>}
