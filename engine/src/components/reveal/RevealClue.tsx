@@ -66,6 +66,7 @@ const styles = stylex.create({
     backgroundColor: 'var(--object-accent-soft)',
     fontSize: 13,
     lineHeight: 1.55,
+    whiteSpace: 'pre-wrap',
   },
 });
 
