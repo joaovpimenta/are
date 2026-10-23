@@ -41,16 +41,16 @@ describe('narrative puzzle catalog', () => {
     expect(screen.queryByText('Pista 3 · Direção final')).not.toBeInTheDocument();
     expect(screen.queryByText(story.hints[0])).not.toBeInTheDocument();
     const first = screen.getByText('Pista 1 · Observe').closest('section')!;
-    fireEvent.click(within(first).getByRole('button', { name: 'Revelar pista' }));
+    fireEvent.click(within(first).getByRole('button', { name: 'Revelar pista 1' }));
     expect(screen.getByText(story.hints[0])).toBeVisible();
     expect(screen.getByText('Pista 2 · Relacione')).toBeVisible();
 
     const second = screen.getByText('Pista 2 · Relacione').closest('section')!;
-    fireEvent.click(within(second).getByRole('button', { name: 'Revelar pista' }));
+    fireEvent.click(within(second).getByRole('button', { name: 'Revelar pista 2' }));
     expect(screen.getByText('Pista 3 · Direção final')).toBeVisible();
 
     const answer = screen.getByText('Resposta final · Como resolver').closest('section')!;
-    fireEvent.click(within(answer).getByRole('button', { name: 'Revelar pista' }));
+    fireEvent.click(within(answer).getByRole('button', { name: 'Mostrar solução completa' }));
     expect(within(answer).getByText('RESPOSTA: ' + story.solution, { exact: false })).toBeVisible();
 
     rerender(<PuzzleGuide story={story} theme={defaultTheme} resetKey={1} />);
