@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
-import type { Mesh } from 'three';
+import type { Group, Mesh } from 'three';
 import { beginGesture, isTapGesture, moveGesture, type GestureState, type PointerSample } from '../../input/gesture';
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme } from '../../theme';
@@ -11,21 +11,6 @@ import { toObjectThemeStyle, toThreeTheme } from '../../theme';
 import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
-  keyLabel: {
-    width: 34,
-    height: 34,
-    display: 'grid',
-    placeItems: 'center',
-    borderRadius: 9,
-    color: 'var(--object-text)',
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-    fontWeight: 800,
-    fontSize: 14,
-    lineHeight: 1,
-    userSelect: 'none',
-    pointerEvents: 'none',
-    textShadow: '0 0 12px var(--object-accent)',
-  },
   display: {
     minWidth: 118,
     padding: '7px 12px',
@@ -53,6 +38,78 @@ type KeyButtonProps = {
   onPress: (label: string) => void;
 };
 
+
+type Segment = 'top' | 'middle' | 'bottom' | 'upperLeft' | 'upperRight' | 'lowerLeft' | 'lowerRight' | 'diagonalUp' | 'diagonalDown';
+
+const segmentGeometry: Record<Segment, { x: number; y: number; length: number; angle: number }> = {
+  top: { x: 0, y: 0.18, length: 0.23, angle: 0 },
+  middle: { x: 0, y: 0, length: 0.23, angle: 0 },
+  bottom: { x: 0, y: -0.18, length: 0.23, angle: 0 },
+  upperLeft: { x: -0.13, y: 0.09, length: 0.18, angle: Math.PI / 2 },
+  upperRight: { x: 0.13, y: 0.09, length: 0.18, angle: Math.PI / 2 },
+  lowerLeft: { x: -0.13, y: -0.09, length: 0.18, angle: Math.PI / 2 },
+  lowerRight: { x: 0.13, y: -0.09, length: 0.18, angle: Math.PI / 2 },
+  diagonalUp: { x: 0.07, y: 0.09, length: 0.22, angle: 0.98 },
+  diagonalDown: { x: 0.07, y: -0.09, length: 0.22, angle: -0.98 },
+};
+
+const glyphSegments: Record<string, readonly Segment[]> = {
+  '0': ['top', 'upperLeft', 'upperRight', 'lowerLeft', 'lowerRight', 'bottom'],
+  '1': ['upperRight', 'lowerRight'],
+  '2': ['top', 'upperRight', 'middle', 'lowerLeft', 'bottom'],
+  '3': ['top', 'upperRight', 'middle', 'lowerRight', 'bottom'],
+  '4': ['upperLeft', 'upperRight', 'middle', 'lowerRight'],
+  '5': ['top', 'upperLeft', 'middle', 'lowerRight', 'bottom'],
+  '6': ['top', 'upperLeft', 'middle', 'lowerLeft', 'lowerRight', 'bottom'],
+  '7': ['top', 'upperRight', 'lowerRight'],
+  '8': ['top', 'middle', 'bottom', 'upperLeft', 'upperRight', 'lowerLeft', 'lowerRight'],
+  '9': ['top', 'middle', 'bottom', 'upperLeft', 'upperRight', 'lowerRight'],
+  C: ['top', 'upperLeft', 'lowerLeft', 'bottom'],
+  O: ['top', 'upperLeft', 'upperRight', 'lowerLeft', 'lowerRight', 'bottom'],
+  K: ['upperLeft', 'lowerLeft', 'diagonalUp', 'diagonalDown'],
+};
+
+/**
+ * The key legend must be in the same 3D coordinate space as its visible face
+ * and hit target. An Html overlay can shift or intercept pointer coordinates.
+ * Small emissive segments also make the legends independent of remote fonts.
+ */
+function KeyGlyph({ label, theme, hovered }: { label: string; theme: AreTheme; hovered: boolean }) {
+  const characters = label === 'OK' ? ['O', 'K'] : [label];
+  return (
+    <group position={[0, 0, 0.14]}>
+      {characters.map((character, index) => (
+        <group
+          key={index}
+          position={[characters.length === 2 ? (index - 0.5) * 0.34 : 0, 0, 0]}
+          scale={characters.length === 2 ? 0.7 : 1}
+        >
+          {glyphSegments[character].map((segment) => {
+            const part = segmentGeometry[segment];
+            return (
+              <mesh
+                key={segment}
+                position={[part.x, part.y, 0]}
+                rotation={[0, 0, part.angle]}
+                raycast={() => {}}
+              >
+                <boxGeometry args={[part.length, 0.039, 0.023]} />
+                <meshStandardMaterial
+                  color={theme.text}
+                  emissive={theme.accent}
+                  emissiveIntensity={hovered ? 0.7 : 0.24}
+                  roughness={0.45}
+                  metalness={0.15}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function pointerSample(event: ThreeEvent<PointerEvent>): PointerSample {
   return {
     pointerId: event.pointerId,
@@ -63,16 +120,16 @@ function pointerSample(event: ThreeEvent<PointerEvent>): PointerSample {
 }
 
 function KeyButton({ label, position, theme, disabled, reducedMotion = false, onPress }: KeyButtonProps) {
-  const mesh = useRef<Mesh>(null);
+  const face = useRef<Group>(null);
   const gesture = useRef<GestureState | null>(null);
   const [hovered, setHovered] = useState(false);
   const [pressed, setPressed] = useState(false);
   const debugHitTargets = interactionDebugEnabled();
 
   useFrame((_, delta) => {
-    if (!mesh.current) return;
-    const targetZ = pressed ? -0.08 : hovered ? 0.08 : 0;
-    mesh.current.position.z = reducedMotion ? targetZ : mesh.current.position.z + (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
+    if (!face.current) return;
+    const targetZ = pressed ? -0.07 : hovered ? 0.045 : 0;
+    face.current.position.z = reducedMotion ? targetZ : face.current.position.z + (targetZ - face.current.position.z) * Math.min(1, delta * 18);
   });
 
   const debug = (event: ThreeEvent<PointerEvent>) => {
@@ -88,7 +145,10 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
         position={[0, 0, 0.21]}
         onPointerEnter={(event) => {
           event.stopPropagation();
-          if (!disabled) setHovered(true);
+          if (!disabled) {
+            setHovered(true);
+            debug(event);
+          }
         }}
         onPointerLeave={() => {
           setHovered(false);
@@ -103,6 +163,7 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
           debug(event);
         }}
         onPointerMove={(event) => {
+          if (!disabled) debug(event);
           const current = gesture.current;
           if (!current || current.pointerId !== event.pointerId) return;
           const next = moveGesture(current, pointerSample(event));
@@ -126,19 +187,27 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
         <boxGeometry args={[0.82, 0.64, 0.26]} />
         <meshBasicMaterial color={theme.accent} transparent opacity={debugHitTargets ? 0.16 : 0} depthWrite={false} />
       </mesh>
-      <mesh ref={mesh} castShadow receiveShadow>
-        <boxGeometry args={[0.72, 0.54, 0.22]} />
-        <meshStandardMaterial
-          color={hovered ? theme.accentSoft : theme.surfaceRaised}
-          emissive={theme.accent}
-          emissiveIntensity={hovered ? 0.35 : 0.06}
-          metalness={0.68}
-          roughness={0.28}
-        />
-      </mesh>
-      <Html transform center position={[0, 0, 0.16]} distanceFactor={5.8}>
-        <span {...stylex.props(styles.keyLabel)} style={toObjectThemeStyle(theme)}>{label}</span>
-      </Html>
+      <group ref={face}>
+        <RoundedBox args={[0.78, 0.6, 0.2]} radius={0.055} smoothness={3} position={[0, 0, -0.012]}>
+          <meshStandardMaterial
+            color={hovered || pressed ? theme.accent : theme.metalDark}
+            emissive={theme.accent}
+            emissiveIntensity={hovered || pressed ? 0.45 : 0.035}
+            metalness={0.72}
+            roughness={0.3}
+          />
+        </RoundedBox>
+        <RoundedBox castShadow receiveShadow args={[0.72, 0.54, 0.22]} radius={0.055} smoothness={3}>
+          <meshStandardMaterial
+            color={pressed ? theme.accentSoft : hovered ? theme.surface : theme.surfaceRaised}
+            emissive={theme.accent}
+            emissiveIntensity={hovered ? 0.28 : 0.045}
+            metalness={0.68}
+            roughness={0.28}
+          />
+        </RoundedBox>
+        <KeyGlyph label={label} theme={theme} hovered={hovered || pressed} />
+      </group>
     </group>
   );
 }
@@ -187,7 +256,7 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, red
       <AccentRail position={[-1.55, -0.2, 0.12]} length={3.18} palette={palette} vertical />
       <AccentRail position={[1.55, -0.2, 0.12]} length={3.18} palette={palette} vertical />
 
-      <Html transform center position={[0, 1.5, 0.15]} distanceFactor={5.6}>
+      <Html transform center pointerEvents="none" position={[0, 1.5, 0.15]} distanceFactor={5.6}>
         <div {...stylex.props(styles.display)} style={toObjectThemeStyle(theme)}>{value.padEnd(4, '·')}</div>
       </Html>
 
