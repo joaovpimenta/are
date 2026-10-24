@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import type { ReactNode } from 'react';
+import { canvasEvents } from '@are/engine/input/canvasEvents';
 
 const styles = stylex.create({
   stage: {
@@ -17,7 +18,7 @@ const styles = stylex.create({
 export function HardwareStage({ children, label }: { children: ReactNode; label: string }) {
   return (
     <div {...stylex.props(styles.stage)}>
-      <Canvas aria-label={label} shadows dpr={[1, 1.5]} camera={{ position: [0, 0.15, 7.7], fov: 38 }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
+      <Canvas events={canvasEvents} aria-label={label} shadows dpr={[1, 1.5]} camera={{ position: [0, 0.15, 7.7], fov: 38 }} gl={{ antialias: true, powerPreference: 'high-performance' }}>
         <ambientLight intensity={0.7} />
         <directionalLight position={[4, 6, 7]} intensity={2.2} castShadow />
         <directionalLight position={[-4, 1, 3]} intensity={0.65} />
