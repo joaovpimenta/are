@@ -1,4 +1,6 @@
-import type { BoundingBox, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+type BoundingBox = { x: number; y: number; width: number; height: number };
 import { Group, PerspectiveCamera, Vector3 } from 'three';
 import { expect, test } from '../fixtures';
 import { latestInteractionDebug } from '../helpers';
@@ -15,7 +17,7 @@ async function keypadCanvas(page: Page) {
   await expect(canvas).toHaveAttribute('data-scene-ready', 'true');
   await canvas.evaluate(async (element) => {
     element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   });
   const bounds = await canvas.boundingBox();
   expect(bounds).not.toBeNull();
@@ -26,7 +28,8 @@ async function keypadCanvas(page: Page) {
 function keyPoint(bounds: BoundingBox, label: string, localX = 0, localY = 0) {
   const row = layout.findIndex((keys) => (keys as readonly string[]).includes(label));
   if (row < 0) throw new Error(`Unknown key ${label}`);
-  const column = layout[row].indexOf(label as never);
+  const rowKeys: readonly string[] = layout[row];
+  const column = rowKeys.indexOf(label);
 
   const camera = new PerspectiveCamera(38, bounds.width / bounds.height, 0.1, 1000);
   camera.position.set(0, 0.12, 7.5);
@@ -88,9 +91,11 @@ test('Keypad touch uses the same 3D centers for digit and clear', async ({ page 
   await page.goto('/lab/keypad/');
   const bounds = await keypadCanvas(page);
 
-  await page.touchscreen.tap(...Object.values(keyPoint(bounds, '4')) as [number, number]);
+  const four = keyPoint(bounds, '4');
+  await page.touchscreen.tap(four.x, four.y);
   await expect(page.getByText('entrada=4')).toBeVisible();
-  await page.touchscreen.tap(...Object.values(keyPoint(bounds, 'C')) as [number, number]);
+  const clear = keyPoint(bounds, 'C');
+  await page.touchscreen.tap(clear.x, clear.y);
   await expect(page.getByText('entrada=----')).toBeVisible();
 
   const digit = keyPoint(bounds, '1');
