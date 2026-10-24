@@ -7,11 +7,11 @@ import { clientPointToNdc } from './coordinates';
  * also make its offsets differ from the WebGL canvas's visual rectangle.
  * Always raycast from viewport client coordinates relative to the actual canvas.
  */
-export function canvasEvents(state: RootState) {
-  const defaultEvents = events(state);
+export function canvasEvents(store: Parameters<typeof events>[0]) {
+  const defaultEvents = events(store);
   return {
     ...defaultEvents,
-    compute: (event: Parameters<typeof defaultEvents.compute>[0], current: RootState) => {
+    compute: (event: Parameters<NonNullable<typeof defaultEvents.compute>>[0], current: RootState) => {
       const bounds = current.gl.domElement.getBoundingClientRect();
       if (bounds.width <= 0 || bounds.height <= 0) return;
       const pointer = clientPointToNdc(event.clientX, event.clientY, bounds);
