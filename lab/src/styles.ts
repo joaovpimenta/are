@@ -565,7 +565,10 @@ export const labStyles = stylex.create({
   },
   workbenchHeader: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gridTemplateColumns: {
+      default: 'minmax(0, 1fr) auto',
+      '@media (max-width: 480px)': 'minmax(0, 1fr)',
+    },
     alignItems: 'start',
     gap: 18,
     padding: {
@@ -602,6 +605,9 @@ export const labStyles = stylex.create({
   },
   statusBadge: {
     flexShrink: 0,
+    justifySelf: 'start',
+    minWidth: 96,
+    textAlign: 'center',
     paddingBlock: 8,
     paddingInline: 10,
     borderWidth: 1,
