@@ -1,9 +1,9 @@
 import type { Page } from '@playwright/test';
-
-type BoundingBox = { x: number; y: number; width: number; height: number };
 import { Group, PerspectiveCamera, Vector3 } from 'three';
 import { expect, test } from '../fixtures';
 import { latestInteractionDebug } from '../helpers';
+
+type BoundingBox = { x: number; y: number; width: number; height: number };
 
 const layout = [
   ['1', '2', '3'],
