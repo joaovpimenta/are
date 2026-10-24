@@ -78,11 +78,19 @@ test('Keypad hover and raycasting match every visible 3D key and its edges', asy
 
   // Resolve using only rendered keys. Fallback DOM buttons are not involved.
   for (const [label, expected] of [['1', '1'], ['9', '19'], ['8', '198'], ['4', '1984']] as const) {
-    const point = keyPoint(bounds, label);
+    const currentBounds = await keypadCanvas(page);
+    const point = keyPoint(currentBounds, label);
     await page.mouse.click(point.x, point.y);
     await expect(page.getByText(`entrada=${expected}`)).toBeVisible();
+    if (label === '1') {
+      const afterStatusChange = await page.getByLabel('Painel de acesso 3D').locator('canvas').boundingBox();
+      expect(afterStatusChange).not.toBeNull();
+      // Updating the narrow-screen status badge must not shift the instrument.
+      expect(afterStatusChange!.y).toBeCloseTo(currentBounds.y, 0);
+    }
   }
-  const submit = keyPoint(bounds, 'OK');
+  const submitBounds = await keypadCanvas(page);
+  const submit = keyPoint(submitBounds, 'OK');
   await page.mouse.click(submit.x, submit.y);
   await expect(page.locator('article [data-status="solved"]')).toBeVisible();
 });
@@ -94,11 +102,11 @@ test('Keypad touch uses the same 3D centers for digit and clear', async ({ page 
   const four = keyPoint(bounds, '4');
   await page.touchscreen.tap(four.x, four.y);
   await expect(page.getByText('entrada=4')).toBeVisible();
-  const clear = keyPoint(bounds, 'C');
+  const clear = keyPoint(await keypadCanvas(page), 'C');
   await page.touchscreen.tap(clear.x, clear.y);
   await expect(page.getByText('entrada=----')).toBeVisible();
 
-  const digit = keyPoint(bounds, '1');
+  const digit = keyPoint(await keypadCanvas(page), '1');
   await page.touchscreen.tap(digit.x, digit.y);
   await expect(page.getByText('entrada=1')).toBeVisible();
   const debug = await latestInteractionDebug(page);
