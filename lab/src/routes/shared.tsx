@@ -1,6 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import type { ReactNode } from 'react';
 import { getCanvasQuality } from '@are/engine/core/canvasQuality';
+import { canvasEvents } from '@are/engine/input/canvasEvents';
 
 function SceneReady() {
   useFrame(({ gl }) => {
@@ -33,6 +34,7 @@ export function HardwareCanvas({
 
   return (
     <Canvas
+      events={canvasEvents}
       aria-label={ariaLabel}
       shadows="percentage"
       frameloop={quality.frameloop}
