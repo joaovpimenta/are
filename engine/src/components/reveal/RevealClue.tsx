@@ -1,5 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle } from '../../theme';
 
@@ -12,7 +12,7 @@ type RevealClueProps = {
   onReveal?: () => void;
 };
 
-const styles = stylex.create({
+export const clueStyles = stylex.create({
   panel: {
     display: 'grid',
     gap: 12,
@@ -71,28 +71,31 @@ const styles = stylex.create({
 
 export function RevealClue({ title, teaser, content, theme, resetKey = 0, onReveal }: RevealClueProps) {
   const [revealed, setRevealed] = useState(false);
+  const [open, setOpen] = useState(false);
+  const contentId = useId();
   const variables = toObjectThemeStyle(theme);
 
   useEffect(() => {
     setRevealed(false);
+    setOpen(false);
   }, [resetKey]);
 
   const reveal = () => {
-    setRevealed(true);
-    onReveal?.();
+    setOpen(!open);
+    if (!revealed) {
+      setRevealed(true);
+      onReveal?.();
+    }
   };
 
   return (
-    <section {...stylex.props(styles.panel)} style={variables} aria-label={title}>
-      <h3 {...stylex.props(styles.title)}>{title}</h3>
-      <p {...stylex.props(styles.teaser)}>{teaser}</p>
-      {revealed ? (
-        <p {...stylex.props(styles.content)} aria-live="polite">{content}</p>
-      ) : (
-        <button {...stylex.props(styles.button)} type="button" onClick={reveal} aria-expanded={revealed}>
-          Revelar pista
-        </button>
-      )}
+    <section {...stylex.props(clueStyles.panel)} style={variables} aria-label={title}>
+      <h3 {...stylex.props(clueStyles.title)}>{title}</h3>
+      <p {...stylex.props(clueStyles.teaser)}>{teaser}</p>
+      <button {...stylex.props(clueStyles.button)} type="button" onClick={reveal} aria-expanded={open} aria-controls={contentId}>
+        {open ? 'Ocultar pista' : revealed ? 'Mostrar pista' : 'Revelar pista'}
+      </button>
+      <div id={contentId} aria-live="polite">{open && <p {...stylex.props(clueStyles.content)}>{content}</p>}</div>
     </section>
   );
 }

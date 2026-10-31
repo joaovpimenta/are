@@ -1,12 +1,15 @@
 import { TypedEventEmitter } from '../core/events';
 import type { ModuleListener, StatefulModule } from '../core/module';
+import { loadCheckpoint, saveCheckpoint } from './checkpoint';
 
 export type MechanismResult = 'pending' | 'active' | 'error' | 'solved';
+export type MechanismInput = string | number | boolean | readonly (string | number | boolean)[];
 
 export type AdventureSessionSnapshot = {
   adventureId: string;
   sceneId: string | null;
   mechanismResults: Readonly<Record<string, MechanismResult>>;
+  mechanismInputs: Readonly<Record<string, MechanismInput>>;
   inventory: readonly string[];
   selectedArtifactId: string | null;
   completed: boolean;
@@ -17,6 +20,7 @@ export type AdventureSessionEvent =
   | { type: 'MECHANISM_ACTIVE'; mechanismId: string }
   | { type: 'MECHANISM_ERROR'; mechanismId: string }
   | { type: 'MECHANISM_SOLVED'; mechanismId: string }
+  | { type: 'MECHANISM_INPUT_CHANGED'; mechanismId: string; value: MechanismInput }
   | { type: 'ARTIFACT_COLLECTED'; artifactId: string }
   | { type: 'ARTIFACT_SELECTED'; artifactId: string | null }
   | { type: 'SCENE_CHANGED'; sceneId: string }
@@ -26,6 +30,7 @@ export type AdventureSessionDefinition = {
   adventureId: string;
   requiredMechanisms: readonly string[];
   initialSceneId?: string | null;
+  persistence?: { storage: Pick<Storage, 'getItem' | 'setItem'>; key?: string };
 };
 
 export type AdventureSessionEvents = {
@@ -56,7 +61,7 @@ export class AdventureSession implements StatefulModule<AdventureSessionSnapshot
     if (requiredMechanisms.some((id) => !id.trim())) throw new Error('Mechanism ids must be non-empty.');
 
     this.definition = { ...definition, requiredMechanisms };
-    this.snapshot = this.createInitialSnapshot();
+    this.snapshot = loadCheckpoint(this.definition, this.createInitialSnapshot());
   }
 
   getSnapshot = (): AdventureSessionSnapshot => this.snapshot;
@@ -73,11 +78,15 @@ export class AdventureSession implements StatefulModule<AdventureSessionSnapshot
 
     const previousCompleted = this.snapshot.completed;
     let mechanismResults = this.snapshot.mechanismResults;
+    let mechanismInputs = this.snapshot.mechanismInputs;
     let inventory = this.snapshot.inventory;
     let selectedArtifactId = this.snapshot.selectedArtifactId;
     let sceneId = this.snapshot.sceneId;
 
     switch (event.type) {
+      case 'MECHANISM_INPUT_CHANGED':
+        mechanismInputs = { ...mechanismInputs, [event.mechanismId]: Array.isArray(event.value) ? Object.freeze([...event.value]) : event.value };
+        break;
       case 'MECHANISM_ACTIVE':
         mechanismResults = { ...mechanismResults, [event.mechanismId]: 'active' };
         break;
@@ -106,11 +115,13 @@ export class AdventureSession implements StatefulModule<AdventureSessionSnapshot
       ...this.snapshot,
       sceneId,
       mechanismResults: Object.freeze({ ...mechanismResults }),
+      mechanismInputs: Object.freeze({ ...mechanismInputs }),
       inventory: Object.freeze([...inventory]),
       selectedArtifactId,
       completed,
       revision: this.snapshot.revision + 1,
     };
+    saveCheckpoint(this.definition, this.snapshot);
     this.notify();
     this.events.emit('change', { event, snapshot: this.snapshot });
     if (!previousCompleted && completed) this.events.emit('completed', { snapshot: this.snapshot });
@@ -123,6 +134,7 @@ export class AdventureSession implements StatefulModule<AdventureSessionSnapshot
       ...this.createInitialSnapshot(),
       revision: this.snapshot.revision + 1,
     };
+    saveCheckpoint(this.definition, this.snapshot);
     this.notify();
     this.events.emit('reset', { snapshot: this.snapshot });
     return this.snapshot;
@@ -140,6 +152,7 @@ export class AdventureSession implements StatefulModule<AdventureSessionSnapshot
       adventureId: this.definition.adventureId,
       sceneId: this.definition.initialSceneId ?? null,
       mechanismResults: Object.freeze(initialResults(this.definition.requiredMechanisms)),
+      mechanismInputs: Object.freeze({}),
       inventory: Object.freeze([]),
       selectedArtifactId: null,
       completed: false,

@@ -1,0 +1,38 @@
+import * as stylex from '@stylexjs/stylex';
+
+const focusRing = { outlineWidth: 3, outlineStyle: 'solid', outlineColor: 'var(--echo-accent)', outlineOffset: 3 } as const;
+
+export const echoStyles = stylex.create({
+  page: { minHeight: '100dvh', padding: { default: 24, '@media (max-width: 680px)': 12 }, color: 'var(--echo-text)', backgroundColor: 'var(--echo-bg)', backgroundImage: 'radial-gradient(circle at 70% -10%, color-mix(in srgb, var(--echo-accent) 18%, transparent), transparent 38rem)', fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' },
+  shell: { width: 'min(1120px, 100%)', marginInline: 'auto' },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18, paddingBlock: 8 },
+  identity: { display: 'grid', gap: 5 },
+  eyebrow: { margin: 0, color: 'var(--echo-accent)', fontFamily: 'ui-monospace, monospace', fontSize: 11, fontWeight: 900, letterSpacing: 1.5, textTransform: 'uppercase' },
+  title: { margin: 0, fontSize: 'clamp(22px, 4vw, 32px)', letterSpacing: '-0.03em' },
+  actions: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
+  button: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 48, minHeight: 48, paddingBlock: 10, paddingInline: 14, borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--echo-accent) 30%, transparent)', borderRadius: 10, color: 'var(--echo-text)', backgroundColor: 'var(--echo-surface-raised)', cursor: 'pointer', fontSize: 14, fontWeight: 800, textDecoration: 'none', touchAction: 'manipulation', ':hover': { borderColor: 'var(--echo-accent)' }, ':focus-visible': focusRing, ':disabled': { cursor: 'default', opacity: 0.55 } },
+  primary: { width: '100%', borderColor: 'var(--echo-success)', color: 'var(--echo-bg)', backgroundColor: 'var(--echo-success)' },
+  frame: { overflow: 'hidden', borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--echo-accent) 22%, transparent)', borderRadius: { default: 24, '@media (max-width: 680px)': 16 }, backgroundColor: 'var(--echo-surface)', boxShadow: '0 30px 100px rgba(0,0,0,.42)' },
+  sceneHeader: { display: 'grid', gap: 10, padding: { default: 24, '@media (max-width: 680px)': 16 }, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: 'color-mix(in srgb, var(--echo-accent) 14%, transparent)' },
+  sceneTitle: { margin: 0, fontSize: 20, scrollMarginTop: 16, ':focus-visible': focusRing },
+  progress: { width: '100%', height: 6, accentColor: 'var(--echo-success)' },
+  steps: { display: 'grid', gridTemplateColumns: { default: 'repeat(4, minmax(0, 1fr))', '@media (max-width: 540px)': 'repeat(2, minmax(0, 1fr))' }, gap: 8, padding: 0, margin: '0 0 16px', listStyle: 'none' },
+  step: { width: '100%', justifyContent: 'flex-start', textAlign: 'left', gap: 8 },
+  currentStep: { borderColor: 'var(--echo-accent)', backgroundColor: 'color-mix(in srgb, var(--echo-accent) 16%, var(--echo-surface))' },
+  content: { display: 'grid', gridTemplateColumns: { default: 'minmax(0, 1.35fr) minmax(280px, .65fr)', '@media (max-width: 820px)': 'minmax(0, 1fr)' }, gridTemplateAreas: { default: '"artifact controls"', '@media (max-width: 820px)': '"controls" "artifact"' } },
+  stage: { gridArea: 'artifact', minWidth: 0, minHeight: { default: 520, '@media (max-width: 820px)': 360, '@media (max-width: 480px)': 300 }, backgroundImage: 'radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--echo-accent) 9%, transparent), transparent 52%)' },
+  narrativeStage: { display: 'grid', alignContent: 'center', padding: { default: 32, '@media (max-width: 680px)': 16 } },
+  panel: { gridArea: 'controls', minWidth: 0, display: 'grid', alignContent: 'center', gap: 16, padding: { default: 24, '@media (max-width: 680px)': 16 }, borderLeftWidth: { default: 1, '@media (max-width: 820px)': 0 }, borderLeftStyle: 'solid', borderLeftColor: 'color-mix(in srgb, var(--echo-accent) 14%, transparent)' },
+  instruction: { margin: 0, color: 'var(--echo-muted)', fontSize: 14, lineHeight: 1.65 },
+  status: { margin: 0, minHeight: 24, color: 'var(--echo-accent)', fontSize: 14, lineHeight: 1.5 },
+  success: { color: 'var(--echo-success)' },
+  controls: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  slider: { width: '100%', minHeight: 48, accentColor: 'var(--echo-accent)' },
+  readout: { flexGrow: 1, minWidth: 48, color: 'var(--echo-accent)', fontFamily: 'ui-monospace, monospace', fontSize: 24, fontWeight: 900, textAlign: 'center' },
+  rotors: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 },
+  rotor: { display: 'grid', gap: 8, justifyItems: 'center', color: 'var(--echo-muted)', fontSize: 13 },
+  journal: { display: 'grid', gap: 14, marginTop: 18, padding: { default: 24, '@media (max-width: 680px)': 16 }, borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--echo-accent) 20%, transparent)', borderRadius: 16, backgroundColor: 'var(--echo-surface)' },
+  journalText: { margin: 0, paddingLeft: 14, borderLeftWidth: 2, borderLeftStyle: 'solid', borderLeftColor: 'var(--echo-accent)', color: 'var(--echo-text)', fontSize: 15, lineHeight: 1.7 },
+  summary: { display: 'flex', alignItems: 'center', minHeight: 48, cursor: 'pointer', color: 'var(--echo-accent)', fontSize: 14, fontWeight: 800, ':focus-visible': focusRing },
+  dialog: { width: 'min(440px, calc(100% - 32px))', padding: 24, borderWidth: 1, borderStyle: 'solid', borderColor: 'var(--echo-accent)', borderRadius: 18, color: 'var(--echo-text)', backgroundColor: 'var(--echo-surface)', boxShadow: '0 24px 100px rgba(0,0,0,.65)' },
+});

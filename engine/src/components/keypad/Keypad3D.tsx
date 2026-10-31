@@ -69,10 +69,11 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
   const [pressed, setPressed] = useState(false);
   const debugHitTargets = interactionDebugEnabled();
 
-  useFrame((_, delta) => {
+  useFrame(({ invalidate }, delta) => {
     if (!mesh.current) return;
     const targetZ = pressed ? -0.08 : hovered ? 0.08 : 0;
     mesh.current.position.z = reducedMotion ? targetZ : mesh.current.position.z + (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
+    if (!reducedMotion && Math.abs(targetZ - mesh.current.position.z) > 0.001) invalidate();
   });
 
   const debug = (event: ThreeEvent<PointerEvent>) => {

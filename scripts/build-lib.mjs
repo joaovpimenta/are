@@ -80,21 +80,24 @@ export async function assembleBuild(root) {
   const dist = join(root, 'dist');
   const build = join(root, 'build');
   const adventures = await discoverAdventures(join(root, 'adventures'));
-  const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+  // Invoke the running package-manager CLI through Node: Windows cannot spawn
+  // a .cmd shim with execFileSync, and shell execution would reinterpret args.
+  const pnpm = process.env.npm_execpath ? process.execPath : 'pnpm';
+  const pnpmArgs = process.env.npm_execpath ? [process.env.npm_execpath] : [];
 
   await rm(dist, { recursive: true, force: true });
   await rm(build, { recursive: true, force: true });
   await mkdir(dist, { recursive: true });
 
   const catalog = adventures.map(({ id, title, description }) => ({ id, title, description }));
-  execFileSync(pnpm, ['--filter', '@are/site', 'build'], {
+  execFileSync(pnpm, [...pnpmArgs, '--filter', '@are/site', 'build'], {
     cwd: root,
     stdio: 'inherit',
     env: { ...process.env, ARE_ADVENTURE_CATALOG: JSON.stringify(catalog) },
   });
-  execFileSync(pnpm, ['--filter', '@are/lab', 'build'], { cwd: root, stdio: 'inherit' });
+  execFileSync(pnpm, [...pnpmArgs, '--filter', '@are/lab', 'build'], { cwd: root, stdio: 'inherit' });
   for (const adventure of adventures) {
-    execFileSync(pnpm, ['--filter', adventure.package, 'build'], { cwd: root, stdio: 'inherit' });
+    execFileSync(pnpm, [...pnpmArgs, '--filter', adventure.package, 'build'], { cwd: root, stdio: 'inherit' });
     const source = join(build, 'adventures', adventure.id);
     const target = join(dist, adventure.id);
     await cp(source, target, { recursive: true });

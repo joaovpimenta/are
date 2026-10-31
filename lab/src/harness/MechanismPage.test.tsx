@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LAB_ENTRIES } from '../model';
 import { MechanismPage } from './MechanismPage';
@@ -25,8 +25,12 @@ describe('MechanismPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Signal tuner' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Fallback control' })).toBeEnabled();
+    expect(screen.queryByText(entry.solution)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Revelar dica 1 de 3' }));
+    expect(screen.getByText(entry.hints[0])).toBeVisible();
+    expect(screen.queryByText(entry.hints[1])).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Revelar solução' }));
     expect(screen.getByText(entry.solution)).toBeVisible();
-    for (const hint of entry.hints) expect(screen.getByText(hint, { exact: false })).toBeVisible();
     expect(screen.getByText(/Acessibilidade:/)).toBeVisible();
   });
 });

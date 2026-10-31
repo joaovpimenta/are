@@ -1,7 +1,7 @@
 import { prefersReducedMotion } from '@are/engine/core/reducedMotion';
 import { createAdventureSession } from '@are/engine/session/adventureSession';
 import { useModuleSnapshot } from '@are/engine/session/react';
-import { amberTheme, defaultTheme, toLabThemeStyle } from '@are/engine/theme';
+import { amberTheme, defaultTheme, toLabThemeStyle, toObjectThemeStyle } from '@are/engine/theme';
 import { useEffect, useMemo, useState } from 'react';
 import { LabHarness } from './harness/LabHarness';
 import { Overview } from './harness/Overview';
@@ -78,7 +78,7 @@ export function App() {
       });
 
   return (
-    <div style={toLabThemeStyle(theme)}>
+    <div style={{ ...toLabThemeStyle(theme), ...toObjectThemeStyle(theme) }}>
       <LabHarness
         currentRoute={route}
         snapshot={snapshot}

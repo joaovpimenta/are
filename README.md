@@ -2,6 +2,10 @@
 
 ARE is a TypeScript monorepo for diegetic puzzle Adventures on the web. It now includes a reusable engine, an interactive Lab and the playable **Echo Station** Adventure.
 
+Echo Station keeps the current scene, solved mechanisms, collected evidence and partial radio/rotor inputs in this browser. Players can revisit unlocked scenes, consult the recorded transmission, request progressive hints and return to the Adventure gallery. Restarting asks for confirmation before clearing progress. Touch-friendly DOM controls remain available when WebGL is unavailable.
+
+Session persistence is opt-in through `createAdventureSession({ ..., persistence: { storage: window.localStorage } })`. `MECHANISM_INPUT_CHANGED` stores a mechanism's scalar or flat-array input alongside session progress. Checkpoints are versioned and scoped to the Adventure and its required mechanisms; invalid or unavailable storage falls back to an in-memory session.
+
 ## What is implemented
 
 - `AdventureSession` as the single owner of progress, inventory, Scene and completion;

@@ -1,4 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
+import { useState } from 'react';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle } from '../../theme';
 
@@ -45,13 +46,15 @@ const styles = stylex.create({
   },
   list: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
     gap: 9,
     margin: 0,
     padding: 0,
     listStyle: 'none',
   },
   item: {
+    width: '100%',
+    minWidth: 0,
     display: 'grid',
     gridTemplateColumns: 'auto 1fr',
     alignItems: 'center',
@@ -101,14 +104,14 @@ const styles = stylex.create({
   },
   label: {
     display: 'block',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 800,
   },
   description: {
     display: 'block',
     marginTop: 2,
     color: 'var(--object-muted)',
-    fontSize: 10,
+    fontSize: 12,
     lineHeight: 1.35,
   },
   empty: {
@@ -116,11 +119,16 @@ const styles = stylex.create({
     color: 'var(--object-muted)',
     fontSize: 12,
   },
+  inspection: { display: 'grid', gap: 8, padding: 14, borderRadius: 12, backgroundColor: 'var(--object-accent-soft)', overflowWrap: 'anywhere' },
+  detail: { margin: 0, fontSize: 14, lineHeight: 1.6 },
 });
 
 export function InventoryPanel({ items, selectedId, theme, onSelect }: InventoryPanelProps) {
+  const [inspectedId, setInspectedId] = useState<string | null>(null);
+  const activeId = selectedId === undefined ? inspectedId : selectedId;
   const collectedCount = items.filter((item) => item.collected === true).length;
   const variables = toObjectThemeStyle(theme);
+  const selected = items.find((item) => item.id === activeId);
 
   return (
     <section {...stylex.props(styles.panel)} style={variables} aria-label="Inventário">
@@ -135,22 +143,25 @@ export function InventoryPanel({ items, selectedId, theme, onSelect }: Inventory
           {items.map((item) => (
             <li key={item.id}>
               <button
-                {...stylex.props(styles.item, selectedId === item.id ? styles.selected : undefined)}
+                {...stylex.props(styles.item, activeId === item.id ? styles.selected : undefined)}
                 type="button"
-                aria-pressed={selectedId === item.id}
+                aria-pressed={activeId === item.id}
                 data-collected={item.collected === true}
-                onClick={() => onSelect?.(item)}
+                onClick={() => { if (selectedId === undefined) setInspectedId(item.id); onSelect?.(item); }}
               >
                 <span {...stylex.props(styles.icon)} aria-hidden="true">{item.symbol ?? '◇'}</span>
                 <span>
                   <span {...stylex.props(styles.label)}>{item.label}</span>
-                  <span {...stylex.props(styles.description)}>{item.description}</span>
+                  <span {...stylex.props(styles.description)}>{item.collected ? 'Encontrado · inspecionar' : 'Inspecionar objeto'}</span>
                 </span>
               </button>
             </li>
           ))}
         </ul>
       )}
+      <div aria-live="polite" aria-atomic="true">
+        {selected && <div {...stylex.props(styles.inspection)}><strong>{selected.label}</strong><p {...stylex.props(styles.detail)}>{selected.description}</p></div>}
+      </div>
     </section>
   );
 }
