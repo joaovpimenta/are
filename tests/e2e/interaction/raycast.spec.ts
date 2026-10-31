@@ -19,6 +19,7 @@ async function tapCanvas(page: Page, xRatio: number, yRatio: number) {
   expect(box).not.toBeNull();
   const x = box!.x + box!.width * xRatio;
   const y = box!.y + box!.height * yRatio;
+  expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, { x, y })).toBe('CANVAS');
   await page.touchscreen.tap(x, y);
   return { box: box!, x, y };
 }

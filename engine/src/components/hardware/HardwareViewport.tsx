@@ -50,7 +50,7 @@ export function HardwareViewport({ children, ariaLabel, cameraZ = 7.5 }: { child
   const [supported] = useState(supportsWebGL);
   if (!supported) return <Unavailable />;
   return <ViewportBoundary>
-    <Canvas aria-label={ariaLabel} shadows="percentage" frameloop={quality.frameloop} camera={{ position: [0, 0.12, cameraZ], fov: 38 }} dpr={quality.dpr} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<p {...stylex.props(styles.fallback)}>Use os controles da página para continuar sem a visualização 3D.</p>}>
+    <Canvas aria-label={ariaLabel} shadows="percentage" frameloop="demand" camera={{ position: [0, 0.12, cameraZ], fov: 38 }} dpr={quality.dpr} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<p {...stylex.props(styles.fallback)}>Use os controles da página para continuar sem a visualização 3D.</p>}>
       <ambientLight intensity={0.72} />
       <directionalLight position={[4, 6, 7]} intensity={2.2} castShadow />
       <directionalLight position={[-5, 1, 4]} intensity={0.72} />

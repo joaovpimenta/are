@@ -45,10 +45,11 @@ function Lever({ index, label, value, palette, theme, reducedMotion, disabled, o
   const [hovered, setHovered] = useState(false);
   const debugHitTargets = interactionDebugEnabled();
 
-  useFrame((_, delta) => {
+  useFrame(({ invalidate }, delta) => {
     if (!lever.current) return;
     const target = value ? -0.62 : 0.62;
     lever.current.rotation.x = reducedMotion ? target : lever.current.rotation.x + (target - lever.current.rotation.x) * Math.min(1, delta * 15);
+    if (!reducedMotion && Math.abs(target - lever.current.rotation.x) > 0.001) invalidate();
   });
 
   const debug = (event: ThreeEvent<PointerEvent>) => {

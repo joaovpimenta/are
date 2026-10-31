@@ -165,10 +165,11 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, red
   const root = useRef<Mesh>(null);
   const palette = toThreeTheme(theme);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock, invalidate }) => {
     if (!root.current) return;
     const shake = status === 'error' && !reducedMotion ? Math.sin(clock.elapsedTime * 55) * 0.045 : 0;
     root.current.rotation.z = shake;
+    if (status === 'error' && !reducedMotion) invalidate();
   });
 
   const accent = status === 'solved' ? theme.success : status === 'error' ? theme.danger : theme.accent;

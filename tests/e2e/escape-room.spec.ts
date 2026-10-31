@@ -1,5 +1,36 @@
 import { expect, test } from './fixtures';
 
+test('idle hardware stops drawing and redraws when the player changes a control', async ({ page }) => {
+  await page.addInitScript(() => {
+    let draws = 0;
+    Object.defineProperty(window, '__ARE_TEST_DRAW_CALLS__', { get: () => draws });
+    const original = WebGL2RenderingContext.prototype.drawElements;
+    WebGL2RenderingContext.prototype.drawElements = function (...args) {
+      draws += 1;
+      return Reflect.apply(original, this, args);
+    };
+  });
+  const drawCount = () => page.evaluate(() => Reflect.get(window, '__ARE_TEST_DRAW_CALLS__') as number);
+  const expectIdle = async () => {
+    await expect.poll(async () => {
+      const before = await drawCount();
+      await page.waitForTimeout(300);
+      return await drawCount() === before;
+    }).toBe(true);
+  };
+  await page.goto('/echo-station/');
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.getByRole('button', { name: 'Concluir', exact: true }).click();
+  await expect(page.getByLabel('Rádio de ondas curtas da Echo Station').locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
+  await expect.poll(drawCount).toBeGreaterThan(0);
+  await expectIdle();
+  const beforeChange = await drawCount();
+  await page.getByRole('button', { name: 'Aumentar frequência' }).click();
+  await expect(page.getByRole('slider', { name: 'Frequência do rádio' })).toHaveValue('42');
+  await expect.poll(drawCount).toBeGreaterThan(beforeChange);
+  await expectIdle();
+});
+
 test('Echo Station preserves input, gates scenes, keeps clues and offers a safe restart and gallery exit', async ({ page }) => {
   await page.goto('/are/echo-station/');
   const stages = page.getByRole('navigation', { name: 'Etapas da aventura' });
