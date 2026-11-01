@@ -1,7 +1,22 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, events, useFrame, useThree, type RootStore } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { Component, useLayoutEffect, useState, type ReactNode } from 'react';
 import { getCanvasQuality } from '../../core/canvasQuality';
+import { clientPointToNdc } from '../../input/coordinates';
+
+function canvasPointerEvents(store: RootStore) {
+  const manager = events(store);
+  manager.compute = (event, current) => {
+    const bounds = current.gl.domElement.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    // HTML legends can become the event target. Their offsetX/Y are not
+    // canvas coordinates, so project the viewport point against the canvas.
+    const point = clientPointToNdc(event.clientX, event.clientY, bounds);
+    current.pointer.set(point.x, point.y);
+    current.raycaster.setFromCamera(current.pointer, current.camera);
+  };
+  return manager;
+}
 
 const styles = stylex.create({
   fallback: { display: 'grid', alignContent: 'center', minHeight: 240, padding: 24, color: 'inherit', fontSize: 15, lineHeight: 1.6 },
@@ -50,7 +65,7 @@ export function HardwareViewport({ children, ariaLabel, cameraZ = 7.5 }: { child
   const [supported] = useState(supportsWebGL);
   if (!supported) return <Unavailable />;
   return <ViewportBoundary>
-    <Canvas aria-label={ariaLabel} shadows="percentage" frameloop="demand" camera={{ position: [0, 0.12, cameraZ], fov: 38 }} dpr={quality.dpr} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<p {...stylex.props(styles.fallback)}>Use os controles da página para continuar sem a visualização 3D.</p>}>
+    <Canvas events={canvasPointerEvents} aria-label={ariaLabel} shadows="percentage" frameloop="demand" camera={{ position: [0, 0.12, cameraZ], fov: 38 }} dpr={quality.dpr} gl={{ antialias: true, powerPreference: 'high-performance' }} fallback={<p {...stylex.props(styles.fallback)}>Use os controles da página para continuar sem a visualização 3D.</p>}>
       <ambientLight intensity={0.72} />
       <directionalLight position={[4, 6, 7]} intensity={2.2} castShadow />
       <directionalLight position={[-5, 1, 4]} intensity={0.72} />

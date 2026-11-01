@@ -1,4 +1,4 @@
-import { Html, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
@@ -8,6 +8,7 @@ import { beginGesture, isTapGesture, moveGesture, type GestureState, type Pointe
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
+import { HardwareLabel } from '../hardware/HardwareLabel';
 import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
@@ -137,9 +138,9 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
           roughness={0.28}
         />
       </mesh>
-      <Html transform center position={[0, 0, 0.16]} distanceFactor={5.8}>
+      <HardwareLabel transform center position={[0, 0, 0.16]} distanceFactor={5.8}>
         <span {...stylex.props(styles.keyLabel)} style={toObjectThemeStyle(theme)}>{label}</span>
-      </Html>
+      </HardwareLabel>
     </group>
   );
 }
@@ -189,9 +190,9 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, red
       <AccentRail position={[-1.55, -0.2, 0.12]} length={3.18} palette={palette} vertical />
       <AccentRail position={[1.55, -0.2, 0.12]} length={3.18} palette={palette} vertical />
 
-      <Html transform center position={[0, 1.5, 0.15]} distanceFactor={5.6}>
+      <HardwareLabel transform center position={[0, 1.5, 0.15]} distanceFactor={5.6}>
         <div {...stylex.props(styles.display)} style={toObjectThemeStyle(theme)}>{value.padEnd(4, '·')}</div>
-      </Html>
+      </HardwareLabel>
 
       {keys.flatMap((row, rowIndex) => row.map((label, colIndex) => {
         const x = (colIndex - 1) * 0.9;

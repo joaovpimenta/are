@@ -1,4 +1,4 @@
-import { Html, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
@@ -17,6 +17,7 @@ import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
+import { HardwareLabel } from '../hardware/HardwareLabel';
 import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
@@ -202,9 +203,9 @@ export function Tuner3D({
         </group>
       </group>
 
-      <Html transform center position={[-0.85, -0.66, 0.16]} distanceFactor={6}>
+      <HardwareLabel transform center position={[-0.85, -0.66, 0.16]} distanceFactor={6}>
         <div {...stylex.props(styles.legend)} style={toObjectThemeStyle(theme)}><span {...stylex.props(styles.value)}>{String(value).padStart(2, '0')}</span><span {...stylex.props(styles.unit)}>SIGNAL BAND</span></div>
-      </Html>
+      </HardwareLabel>
       <StatusLamp position={[-2.1, -0.82, 0.02]} color={solved ? palette.success : palette.warning} active={solved} />
       <pointLight position={[-0.4, 0.7, 1.2]} color={solved ? palette.success : palette.accent} intensity={solved ? 0.8 : 0.28} distance={4} />
     </group>
