@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import type { ReactNode } from 'react';
 import type { LabEntry } from '../model';
 import { labStyles } from '../styles';
+import { HintLadder } from '../../../engine/src/components/reveal/HintLadder';
 
 type MechanismPageProps = {
   entry: LabEntry;
@@ -30,14 +31,6 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
         )} data-status={status}>{status}</span>
       </header>
 
-      <div {...stylex.props(labStyles.stage)}>
-        <div {...stylex.props(labStyles.stageLead)}>
-          <span {...stylex.props(labStyles.stageLeadLabel)}>Live artifact viewport</span>
-          <span {...stylex.props(labStyles.stageLeadRule)} aria-hidden="true" />
-        </div>
-        {visual}
-      </div>
-
       <section {...stylex.props(labStyles.instructionPanel)}>
         <div {...stylex.props(labStyles.instructionCopy)}>
           <p {...stylex.props(labStyles.sectionLabel)}>Operação</p>
@@ -46,22 +39,15 @@ export function MechanismPage({ entry, status, visual, controls, telemetry }: Me
         {controls ? <div {...stylex.props(labStyles.controls)}>{controls}</div> : null}
       </section>
 
-      <div {...stylex.props(labStyles.detailGrid)}>
-        <section {...stylex.props(labStyles.detailPanel)}>
-          <div {...stylex.props(labStyles.detailPanelHeader)}>
-            <p {...stylex.props(labStyles.sectionLabel)}>Solução de teste</p>
-          </div>
-          <p {...stylex.props(labStyles.solution)}>{entry.solution}</p>
-          {telemetry ? <div {...stylex.props(labStyles.telemetry)}>{telemetry}</div> : null}
-        </section>
-        <section {...stylex.props(labStyles.detailPanel)}>
-          <div {...stylex.props(labStyles.detailPanelHeader)}>
-            <p {...stylex.props(labStyles.sectionLabel)}>Hint ladder</p>
-          </div>
-          <ol {...stylex.props(labStyles.hints)}>
-            {entry.hints.map((hint, index) => <li {...stylex.props(labStyles.hintItem)} key={hint}><strong {...stylex.props(labStyles.hintNumber)}>{index + 1}</strong><span>{hint}</span></li>)}
-          </ol>
-        </section>
+      <div {...stylex.props(labStyles.stage)}>
+        <div {...stylex.props(labStyles.stageLead)}>
+          <span {...stylex.props(labStyles.stageLeadLabel)}>Objeto interativo · toque ou clique</span>
+          <span {...stylex.props(labStyles.stageLeadRule)} aria-hidden="true" />
+        </div>
+        {visual}
+      </div>
+      <div {...stylex.props(labStyles.detailPanel)}><HintLadder hints={entry.hints} solution={entry.solution} resetKey={entry.id} />
+        {telemetry ? <div {...stylex.props(labStyles.telemetry)}>{telemetry}</div> : null}
       </div>
       <p {...stylex.props(labStyles.accessibility)}><strong>Acessibilidade:</strong> {entry.accessibility}</p>
     </article>

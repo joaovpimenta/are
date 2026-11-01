@@ -79,7 +79,7 @@ export function Dial3D({
   const debugHitTargets = interactionDebugEnabled();
   const canvasHost = useThree(({ gl }) => gl.domElement.parentElement?.parentElement ?? gl.domElement);
 
-  useFrame((_, delta) => {
+  useFrame(({ invalidate }, delta) => {
     if (!rotor.current) return;
     if (reducedMotion) rotor.current.rotation.z = targetRotation;
     else rotor.current.rotation.z += (targetRotation - rotor.current.rotation.z) * Math.min(1, delta * 9);
@@ -88,6 +88,7 @@ export function Dial3D({
       ? targetScale
       : rotor.current.scale.x + (targetScale - rotor.current.scale.x) * Math.min(1, delta * 12);
     rotor.current.scale.setScalar(next);
+    if (!reducedMotion && (Math.abs(targetRotation - rotor.current.rotation.z) > 0.001 || Math.abs(targetScale - next) > 0.001)) invalidate();
   });
 
   const step = (direction: number) => {

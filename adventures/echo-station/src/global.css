@@ -4,5 +4,5 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; margin: 0; }
 body { min-height: 100dvh; overflow-x: hidden; background: #05080c; }
 button, input { font: inherit; }
 button { appearance: none; }
-canvas { display: block; width: 100% !important; height: 100% !important; outline: none; touch-action: none; }
+canvas { display: block; width: 100% !important; height: 100% !important; outline: none; touch-action: pan-y; user-select: none; }
 ::selection { background: rgba(255, 170, 74, .3); }

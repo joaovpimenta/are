@@ -69,10 +69,11 @@ function KeyButton({ label, position, theme, disabled, reducedMotion = false, on
   const [pressed, setPressed] = useState(false);
   const debugHitTargets = interactionDebugEnabled();
 
-  useFrame((_, delta) => {
+  useFrame(({ invalidate }, delta) => {
     if (!mesh.current) return;
     const targetZ = pressed ? -0.08 : hovered ? 0.08 : 0;
     mesh.current.position.z = reducedMotion ? targetZ : mesh.current.position.z + (targetZ - mesh.current.position.z) * Math.min(1, delta * 18);
+    if (!reducedMotion && Math.abs(targetZ - mesh.current.position.z) > 0.001) invalidate();
   });
 
   const debug = (event: ThreeEvent<PointerEvent>) => {
@@ -164,10 +165,11 @@ export function Keypad3D({ value, status, theme, onDigit, onClear, onSubmit, red
   const root = useRef<Mesh>(null);
   const palette = toThreeTheme(theme);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock, invalidate }) => {
     if (!root.current) return;
     const shake = status === 'error' && !reducedMotion ? Math.sin(clock.elapsedTime * 55) * 0.045 : 0;
     root.current.rotation.z = shake;
+    if (status === 'error' && !reducedMotion) invalidate();
   });
 
   const accent = status === 'solved' ? theme.success : status === 'error' ? theme.danger : theme.accent;

@@ -46,7 +46,7 @@ export function renderLabRoute(id: LabMechanismId, props: LabRouteProps): ReactN
   const Route = routes[id];
   return (
     <Suspense fallback={<div {...stylex.props(styles.loading)} role="status">Inicializando artefato…</div>}>
-      <Route {...props} />
+      <Route key={props.resetVersion} {...props} />
     </Suspense>
   );
 }

@@ -74,10 +74,11 @@ export function Tuner3D({
   const progress = (value - min) / (max - min);
   const debugHitTargets = interactionDebugEnabled();
 
-  useFrame((_, delta) => {
+  useFrame(({ invalidate }, delta) => {
     if (needle.current) {
       const targetX = -1.42 + progress * 2.84;
       needle.current.position.x = reducedMotion ? targetX : needle.current.position.x + (targetX - needle.current.position.x) * Math.min(1, delta * 12);
+      if (!reducedMotion && Math.abs(targetX - needle.current.position.x) > 0.001) invalidate();
     }
     if (rotor.current) {
       const targetRotation = -progress * Math.PI * 5;
@@ -85,6 +86,7 @@ export function Tuner3D({
       const targetScale = hovered ? 1.04 : 1;
       const nextScale = reducedMotion ? targetScale : rotor.current.scale.x + (targetScale - rotor.current.scale.x) * Math.min(1, delta * 12);
       rotor.current.scale.setScalar(nextScale);
+      if (!reducedMotion && (Math.abs(targetRotation - rotor.current.rotation.z) > 0.001 || Math.abs(targetScale - nextScale) > 0.001)) invalidate();
     }
   });
 

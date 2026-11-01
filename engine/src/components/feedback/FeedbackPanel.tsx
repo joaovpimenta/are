@@ -59,7 +59,7 @@ const styles = stylex.create({
   },
   button: {
     justifySelf: 'start',
-    minHeight: 40,
+    minHeight: 48,
     paddingBlock: 8,
     paddingInline: 12,
     borderWidth: 1,
@@ -90,6 +90,7 @@ export function FeedbackPanel({ status, title, message, theme, onReset }: Feedba
       {...stylex.props(styles.panel, status === 'success' ? styles.panelSuccess : status === 'error' ? styles.panelError : undefined)}
       style={variables}
       aria-live="polite"
+      aria-atomic="true"
     >
       <p {...stylex.props(styles.eyebrow)}>{label}</p>
       <h3 {...stylex.props(styles.title, status === 'success' ? styles.successText : status === 'error' ? styles.errorText : undefined)}>

@@ -67,7 +67,7 @@ const styles = stylex.create({
     flexWrap: 'wrap',
   },
   button: {
-    minHeight: 42,
+    minHeight: 48,
     paddingBlock: 9,
     paddingInline: 13,
     borderWidth: 1,
@@ -124,11 +124,12 @@ export function DialoguePanel({ lines, choices = [], theme, resetKey = 0, onChoo
         <span {...stylex.props(styles.speaker)}>{current.speaker}</span>
         <span {...stylex.props(styles.progress)}>{state.lineIndex + 1}/{lines.length}</span>
       </div>
-      <p {...stylex.props(styles.text)}>{current.text}</p>
+      <p {...stylex.props(styles.text)} aria-live="polite" aria-atomic="true">{current.text}</p>
       {state.completed ? (
         <strong {...stylex.props(styles.complete)}>Conversa concluída.</strong>
       ) : (
         <div {...stylex.props(styles.controls)}>
+          <button {...stylex.props(styles.button)} type="button" disabled={state.lineIndex === 0} onClick={() => setState((previous) => ({ ...previous, lineIndex: Math.max(0, previous.lineIndex - 1) }))}>Mensagem anterior</button>
           {choices.map((choice) => (
             <button
               {...stylex.props(styles.button, styles.choice)}

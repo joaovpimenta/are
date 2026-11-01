@@ -20,6 +20,7 @@ export type {
   AdventureSessionEvents,
   AdventureSessionSnapshot,
   MechanismResult,
+  MechanismInput,
 } from './session/adventureSession';
 export { useModuleSnapshot } from './session/react';
 export {
@@ -53,6 +54,7 @@ export type { DialogueChoice, DialogueLine } from './components/dialogue/Dialogu
 export { SequenceInput } from './components/sequence/SequenceInput';
 export { SwitchGroup } from './components/switches/SwitchGroup';
 export { RevealClue } from './components/reveal/RevealClue';
+export { HintLadder } from './components/reveal/HintLadder';
 export { FeedbackPanel } from './components/feedback/FeedbackPanel';
 export type { FeedbackStatus } from './components/feedback/FeedbackPanel';
 export { Tuner3D } from './components/tuner/Tuner3D';

@@ -126,7 +126,7 @@ export function SwitchGroup({ labels, solution, theme, resetKey = 0, onChange, o
     <section {...stylex.props(styles.panel)} style={variables} aria-label="Grupo de interruptores">
       <div {...stylex.props(styles.header)}>
         <span>Interruptores</span>
-        <span>{solved ? 'alinhados' : 'ajuste a combinação'}</span>
+        <span role="status">{solved ? 'Combinação correta.' : 'Ajuste a combinação.'}</span>
       </div>
       <div {...stylex.props(styles.list)}>
         {solution.map((value, index) => (
@@ -136,12 +136,14 @@ export function SwitchGroup({ labels, solution, theme, resetKey = 0, onChange, o
             type="button"
             aria-label={`${labels?.[index] ?? `Interruptor ${index + 1}`}: ${values[index] ? 'ligado' : 'desligado'}`}
             aria-pressed={values[index]}
+            disabled={solved}
             onClick={() => toggle(index)}
           >
             <span {...stylex.props(styles.lever, values[index] ? styles.leverOn : undefined)} aria-hidden="true">
               <span {...stylex.props(styles.knob, values[index] ? styles.knobOn : undefined)} />
             </span>
             {labels?.[index] ?? `SW-${index + 1}`}
+            <span>{values[index] ? 'Ligado' : 'Desligado'}</span>
           </button>
         ))}
       </div>
