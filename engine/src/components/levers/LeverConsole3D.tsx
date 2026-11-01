@@ -1,4 +1,4 @@
-import { Html, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
@@ -8,6 +8,7 @@ import { beginGesture, isTapGesture, moveGesture, type GestureState, type Pointe
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
+import { HardwareLabel } from '../hardware/HardwareLabel';
 import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
@@ -106,9 +107,9 @@ function Lever({ index, label, value, palette, theme, reducedMotion, disabled, o
           <meshStandardMaterial color={value ? palette.accent : palette.metalDark} emissive={palette.accent} emissiveIntensity={value ? 0.35 : 0.02} metalness={0.76} roughness={0.24} />
         </mesh>
       </group>
-      <Html transform center position={[0, -1.05, 0.12]} distanceFactor={6}>
+      <HardwareLabel transform center position={[0, -1.05, 0.12]} distanceFactor={6}>
         <span {...stylex.props(styles.label)} style={toObjectThemeStyle(theme)}>{label}</span>
-      </Html>
+      </HardwareLabel>
     </group>
   );
 }

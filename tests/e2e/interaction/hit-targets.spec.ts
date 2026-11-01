@@ -3,6 +3,42 @@ import { touchPress } from '../helpers';
 
 const keypadButtons = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'C', 'OK'] as const;
 
+test('the visible 3D key captions accept the same full code as the DOM keypad', async ({ page }) => {
+  await page.goto('/lab/keypad/');
+  const hardware = page.getByLabel('Painel de acesso 3D', { exact: true });
+  await expect(hardware.locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
+  await page.waitForLoadState('networkidle');
+  for (const [index, digit] of ['1', '9', '8', '4', 'OK'].entries()) {
+    const caption = hardware.getByText(digit, { exact: true });
+    await caption.scrollIntoViewIfNeeded();
+    const box = await caption.boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    if (index < 4) await expect(page.getByText(`entrada=${'1984'.slice(0, index + 1)}`, { exact: true })).toBeVisible();
+  }
+  await expect(page.locator('article [data-status="solved"]')).toBeVisible();
+});
+
+test('every numeric 3D key and clear key respond to touch at the visible caption', async ({ page }) => {
+  await page.goto('/lab/keypad/');
+  const hardware = page.getByLabel('Painel de acesso 3D', { exact: true });
+  await expect(hardware.locator('canvas')).toHaveAttribute('data-scene-ready', 'true');
+  await page.waitForLoadState('networkidle');
+  const tapCaption = async (label: string) => {
+    const caption = hardware.getByText(label, { exact: true });
+    await caption.scrollIntoViewIfNeeded();
+    const box = await caption.boundingBox();
+    expect(box).not.toBeNull();
+    await page.touchscreen.tap(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  };
+  for (const digit of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']) {
+    await tapCaption(digit);
+    await expect(page.getByText(`entrada=${digit}`, { exact: true })).toBeVisible();
+    await tapCaption('C');
+    await expect(page.getByText('entrada=----', { exact: true })).toBeVisible();
+  }
+});
+
 test('DOM buttons expose 44px hit targets at center and all four edges', async ({ page }) => {
   await page.goto('/lab/keypad/');
   await expect(page.getByRole('heading', { name: 'Keypad' })).toBeVisible();

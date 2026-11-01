@@ -1,4 +1,4 @@
-import { Html, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
 import { useRef, useState } from 'react';
@@ -6,6 +6,7 @@ import { beginGesture, isTapGesture, moveGesture, type GestureState, type Pointe
 import { interactionDebugEnabled, recordPointerDebug } from '../../input/interactionDebug';
 import type { AreTheme, ThreeTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
+import { HardwareLabel } from '../hardware/HardwareLabel';
 import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
@@ -79,7 +80,7 @@ function Rotor({ index, value, palette, theme, disabled, onStep }: RotorProps) {
         <meshBasicMaterial color={palette.accent} transparent opacity={debugHitTargets ? 0.16 : 0} depthWrite={false} />
       </mesh>
       <mesh position={[0, -0.72, 0.23]} rotation={[0, 0, Math.PI]}><coneGeometry args={[0.2, 0.3, 3]} /><meshStandardMaterial color={hovered === -1 ? palette.accent : palette.metal} emissive={palette.accent} emissiveIntensity={hovered === -1 ? 0.35 : 0.02} /></mesh>
-      <Html transform center position={[0, 0, 0.23]} distanceFactor={6}><span {...stylex.props(styles.readout)} style={toObjectThemeStyle(theme)}>{value}</span></Html>
+      <HardwareLabel transform center position={[0, 0, 0.23]} distanceFactor={6}><span {...stylex.props(styles.readout)} style={toObjectThemeStyle(theme)}>{value}</span></HardwareLabel>
     </group>
   );
 }

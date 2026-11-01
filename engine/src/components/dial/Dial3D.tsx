@@ -1,4 +1,4 @@
-import { Html, RoundedBox } from '@react-three/drei';
+import { RoundedBox } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import * as stylex from '@stylexjs/stylex';
@@ -18,6 +18,7 @@ import { capturePointer, releasePointer } from '../../input/pointerCapture';
 import { dialRotation, dialValueFromClockPoint, stepDialValue } from '../../mechanisms/dial';
 import type { AreTheme } from '../../theme';
 import { toObjectThemeStyle, toThreeTheme } from '../../theme';
+import { HardwareLabel } from '../hardware/HardwareLabel';
 import { AccentRail, PanelInset, PanelScrew, StatusLamp } from '../hardware/HardwareParts';
 
 const styles = stylex.create({
@@ -238,9 +239,9 @@ export function Dial3D({
         <meshStandardMaterial color={solved ? palette.success : palette.accent} emissive={solved ? palette.success : palette.accent} emissiveIntensity={0.5} />
       </mesh>
 
-      <Html transform center position={[0, -2.25, 0.2]} distanceFactor={6}>
+      <HardwareLabel transform center position={[0, -2.25, 0.2]} distanceFactor={6}>
         <div {...stylex.props(styles.readout)} style={toObjectThemeStyle(theme)}>{String(value).padStart(2, '0')}</div>
-      </Html>
+      </HardwareLabel>
 
       <pointLight position={[0, 1.2, 1.4]} color={solved ? palette.success : palette.accent} intensity={solved ? 1.1 : 0.45} distance={4.5} />
     </group>
