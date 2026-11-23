@@ -179,13 +179,7 @@ jobs:
 
   quality:
     name: quality
-    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.1.0
-    with:
-      scope: pr
-      enforcement: standard
-      advisory_plugins: 'osv-scanner'
-      qlty_version: '0.672.0'
-      policy_ref: 'qlty-v0.1.0'
+    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.2.0
     permissions:
       contents: read
 

@@ -1,22 +1,24 @@
-name: Quality Audit (Full)
+name: Quality Audit (Manual)
 
 on:
   workflow_dispatch:
     inputs:
-      scope:
-        description: 'Analysis scope (pr or full)'
+      scope_override:
+        description: 'Optional override for project QLTY_SCOPE'
         required: false
         default: 'full'
         type: choice
         options:
+          - project-default
           - full
           - pr
-      enforcement:
-        description: 'Gate enforcement level'
+      enforcement_override:
+        description: 'Optional override for project QLTY_ENFORCEMENT'
         required: false
         default: 'report-only'
         type: choice
         options:
+          - project-default
           - report-only
           - standard
           - strict
@@ -30,10 +32,7 @@ permissions:
 
 jobs:
   quality:
-    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.1.0
+    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.2.0
     with:
-      scope: ${{ inputs.scope || 'full' }}
-      enforcement: ${{ inputs.enforcement || 'report-only' }}
-      advisory_plugins: 'osv-scanner'
-      qlty_version: '0.672.0'
-      policy_ref: 'qlty-v0.1.0'
+      scope_override: ${{ inputs.scope_override != 'project-default' && inputs.scope_override || '' }}
+      enforcement_override: ${{ inputs.enforcement_override != 'project-default' && inputs.enforcement_override || '' }}
