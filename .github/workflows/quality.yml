@@ -1,0 +1,39 @@
+name: Quality Audit (Full)
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Analysis scope (pr or full)'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - pr
+      enforcement:
+        description: 'Gate enforcement level'
+        required: false
+        default: 'report-only'
+        type: choice
+        options:
+          - report-only
+          - standard
+          - strict
+
+concurrency:
+  group: quality-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.1.0
+    with:
+      scope: ${{ inputs.scope || 'full' }}
+      enforcement: ${{ inputs.enforcement || 'report-only' }}
+      advisory_plugins: 'osv-scanner'
+      qlty_version: '0.672.0'
+      policy_ref: 'qlty-v0.1.0'

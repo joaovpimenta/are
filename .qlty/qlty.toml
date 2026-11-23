@@ -1,0 +1,27 @@
+# Qlty CLI pilot configuration for ARE.
+# Inherits shared exclusions, test patterns, and maintainability smell policy
+# from joaovpimenta/joaovpimenta (pinned to tag qlty-v0.1.0).
+# Native ESLint (pnpm lint), tsc, Vitest, build, and Playwright remain in ci.yml.
+
+config_version = "0"
+
+[[source]]
+name = "default"
+default = true
+
+[[source]]
+name = "personal-quality-policy"
+repository = "https://github.com/joaovpimenta/joaovpimenta.git"
+tag = "qlty-v0.1.0"
+
+[[plugin]]
+name = "actionlint"
+version = "1.7.9"
+
+[[plugin]]
+name = "gitleaks"
+version = "8.29.1"
+
+[[plugin]]
+name = "osv-scanner"
+version = "2.3.0"
