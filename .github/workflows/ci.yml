@@ -179,7 +179,7 @@ jobs:
 
   quality:
     name: quality
-    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.2.0
+    uses: joaovpimenta/joaovpimenta/.github/workflows/quality-web.yml@qlty-v0.3.0
     permissions:
       contents: read
 

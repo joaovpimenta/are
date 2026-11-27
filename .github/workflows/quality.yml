@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   quality:
-    uses: joaovpimenta/joaovpimenta/.github/workflows/quality.yml@qlty-v0.2.0
+    uses: joaovpimenta/joaovpimenta/.github/workflows/quality-web.yml@qlty-v0.3.0
     with:
       scope_override: ${{ inputs.scope_override != 'project-default' && inputs.scope_override || '' }}
       enforcement_override: ${{ inputs.enforcement_override != 'project-default' && inputs.enforcement_override || '' }}

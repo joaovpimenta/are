@@ -9,5 +9,21 @@ export default defineConfig({
       'lab/**/*.test.tsx',
       'scripts/**/*.test.ts',
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: 'coverage',
+      exclude: [
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/*.d.ts',
+        'tests/**',
+        'dist/**',
+        'coverage/**',
+        'playwright-report/**',
+        'test-results/**',
+        'scripts/**',
+      ],
+    },
   },
 });
